@@ -5,14 +5,16 @@
 #include <errno.h>
 #include <string.h>
 
-void printProcessStatus(int fork, int pid, int ppid)
+void
+printProcessStatus(int fork, int pid, int ppid)
 {
-	printf( "Donde fork me devuelve %d\n", fork);
-	printf( "  - getpid me devuelve: %d\n", pid);
-	printf( "  - getppid me devuelve: %d\n", ppid);
+	printf("Donde fork me devuelve %d\n", fork);
+	printf("  - getpid me devuelve: %d\n", pid);
+	printf("  - getppid me devuelve: %d\n", ppid);
 }
 
-ssize_t readsome(int fd, void *buf, size_t count)
+ssize_t
+readsome(int fd, void *buf, size_t count)
 {
 	ssize_t s = read(fd, buf, count);
 
@@ -25,7 +27,8 @@ ssize_t readsome(int fd, void *buf, size_t count)
 	return s;
 }
 
-ssize_t writesome(int fd, const void *buf, size_t count)
+ssize_t
+writesome(int fd, const void *buf, size_t count)
 {
 	ssize_t s = write(fd, buf, count);
 
@@ -38,7 +41,8 @@ ssize_t writesome(int fd, const void *buf, size_t count)
 	return s;
 }
 
-int main(void)
+int
+main(void)
 {
 	srandom(time(NULL));
 
@@ -70,7 +74,7 @@ int main(void)
 	int readfd, writefd;
 	int msg = 0;
 
-	if(cpid == 0) {
+	if (cpid == 0) {
 		readfd = fds1[0];
 		writefd = fds2[1];
 		close(fds1[1]);
@@ -93,7 +97,7 @@ int main(void)
 		msg = random();
 
 		printProcessStatus(cpid, getpid(), getppid());
-		printf("  - random me devuelve: %d\n", msg );
+		printf("  - random me devuelve: %d\n", msg);
 		printf("  - envio el valor %d a travez de fd=%d\n\n", msg, writefd);
 
 		writesome(writefd, &msg, sizeof(msg));
