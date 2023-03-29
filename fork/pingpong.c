@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
-
+#include <unistd.h>
 
 void
 printProcessStatus(int fork, int pid, int ppid)
