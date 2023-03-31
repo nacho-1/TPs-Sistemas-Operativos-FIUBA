@@ -3,7 +3,10 @@
 #include <stdio.h>
 #include <time.h>
 #include <unistd.h>
+#include <sys/wait.h>
 
+void
+printProcessStatus(int fork, int pid, int ppid);
 void
 printProcessStatus(int fork, int pid, int ppid)
 {
@@ -68,5 +71,6 @@ main(void)
 	close(readfd);
 	close(writefd);
 
+	wait(NULL);
 	exit(EXIT_SUCCESS);
 }
