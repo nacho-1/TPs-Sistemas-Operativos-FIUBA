@@ -45,8 +45,10 @@ main(int argc, char *argv[])
 				writefd = fds[1];
 				close(fds[0]);
 				while (readsome(readfd, &buf, sizeof(buf)) != 0)
-					if (buf%n != 0)
-						writesome(writefd, &buf, sizeof(buf));
+					if (buf % n != 0)
+						writesome(writefd,
+						          &buf,
+						          sizeof(buf));
 				close(writefd);
 				finished = 1;
 			}

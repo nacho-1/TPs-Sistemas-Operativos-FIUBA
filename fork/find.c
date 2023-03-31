@@ -13,7 +13,8 @@ typedef char string[MAX_PATH_NAME_LENGTH];
 typedef char *(*functionPtr)(const char *, const char *);
 
 DIR *openSubdir(DIR *dir_ptr, string subdir);
-DIR *openSubdir(DIR *dir_ptr, string subdir)
+DIR *
+openSubdir(DIR *dir_ptr, string subdir)
 {
 	int dir_fd = dirfd(dir_ptr);
 	if (dir_fd == -1) {
@@ -21,14 +22,12 @@ DIR *openSubdir(DIR *dir_ptr, string subdir)
 		return NULL;
 	}
 	int subdir_fd = openat(dir_fd, subdir, O_DIRECTORY);
-	if (subdir_fd == -1)
-	{
+	if (subdir_fd == -1) {
 		perror("Failed to open sub-directory");
 		return NULL;
 	}
 	DIR *subdir_ptr = fdopendir(subdir_fd);
-	if (subdir_ptr == NULL)
-	{
+	if (subdir_ptr == NULL) {
 		perror("Failed to assign FD to directory");
 		close(subdir_fd);
 		return NULL;
@@ -36,14 +35,17 @@ DIR *openSubdir(DIR *dir_ptr, string subdir)
 	return subdir_ptr;
 }
 
-void
-findInDir(DIR *dir_ptr, string currentpath, string searchterm, functionPtr strfind);
+void findInDir(DIR *dir_ptr,
+               string currentpath,
+               string searchterm,
+               functionPtr strfind);
 void
 findInDir(DIR *dir_ptr, string currentpath, string searchterm, functionPtr strfind)
 {
 	struct dirent *dent;
 	while ((dent = readdir(dir_ptr)) != NULL) {
-		if (strcmp(dent->d_name, ".") == 0 || strcmp(dent->d_name, "..") == 0)
+		if (strcmp(dent->d_name, ".") == 0 ||
+		    strcmp(dent->d_name, "..") == 0)
 			continue;
 
 		string path;
