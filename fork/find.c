@@ -10,7 +10,7 @@
 #define MAX_PATH_NAME_LENGTH 128
 
 typedef char string[MAX_PATH_NAME_LENGTH];
-typedef char *(*functionPtr)(const char *, const char *);
+typedef char *(*function_ptr)(const char *, const char *);
 
 DIR *open_subdir(DIR *dir_ptr, string subdir);
 DIR *
@@ -38,9 +38,9 @@ open_subdir(DIR *dir_ptr, string subdir)
 void find_in_dir(DIR *dir_ptr,
                string current_path,
                string searchterm,
-               functionPtr strfind);
+               function_ptr strfind);
 void
-find_in_dir(DIR *dir_ptr, string current_path, string searchterm, functionPtr strfind)
+find_in_dir(DIR *dir_ptr, string current_path, string searchterm, function_ptr strfind)
 {
 	struct dirent *dent;
 	while ((dent = readdir(dir_ptr)) != NULL) {
@@ -73,7 +73,7 @@ main(int argc, char *argv[])
 		_exit(EXIT_FAILURE);
 	}
 
-	functionPtr strfind = strstr;
+	function_ptr strfind = strstr;
 
 	if (argc == 3) {
 		if (strcmp(argv[1], FLAG) == 0) {
