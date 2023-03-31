@@ -9,4 +9,4 @@ void *calloc(size_t nmemb, size_t size);
 
 void *realloc(void *ptr, size_t size);
 
-#endif // _MALLOC_H_
+#endif  // _MALLOC_H_

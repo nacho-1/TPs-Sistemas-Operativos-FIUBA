@@ -20,7 +20,7 @@ static char buf[MAX_SIZE];
 // it prevents indirect calls to `malloc(3)`
 //
 int
-printfmt(char* format, ...)
+printfmt(char *format, ...)
 {
 	int r;
 	va_list ap;
