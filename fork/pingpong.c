@@ -6,11 +6,11 @@
 #include <sys/wait.h>
 
 void
-printProcessStatus(int fork, int pid, int ppid);
+print_process_info(int fork_ret, int pid, int ppid);
 void
-printProcessStatus(int fork, int pid, int ppid)
+print_process_info(int fork_ret, int pid, int ppid)
 {
-	printf("Donde fork me devuelve %d\n", fork);
+	printf("Donde fork me devuelve %d\n", fork_ret);
 	printf("  - getpid me devuelve: %d\n", pid);
 	printf("  - getppid me devuelve: %d\n", ppid);
 }
@@ -41,7 +41,7 @@ main(void)
 		close(fds1[1]);
 		close(fds2[0]);
 
-		printProcessStatus(cpid, getpid(), getppid());
+		print_process_info(cpid, getpid(), getppid());
 
 		readsome(readfd, &msg, sizeof(msg));
 
@@ -57,7 +57,7 @@ main(void)
 
 		msg = random();
 
-		printProcessStatus(cpid, getpid(), getppid());
+		print_process_info(cpid, getpid(), getppid());
 		printf("  - random me devuelve: %d\n", msg);
 		printf("  - envio el valor %d a travez de fd=%d\n\n", msg, writefd);
 
