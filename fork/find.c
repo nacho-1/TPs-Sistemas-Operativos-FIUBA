@@ -12,9 +12,9 @@
 typedef char string[MAX_PATH_NAME_LENGTH];
 typedef char *(*functionPtr)(const char *, const char *);
 
-DIR *openSubdir(DIR *dir_ptr, string subdir);
+DIR *open_subdir(DIR *dir_ptr, string subdir);
 DIR *
-openSubdir(DIR *dir_ptr, string subdir)
+open_subdir(DIR *dir_ptr, string subdir)
 {
 	int dir_fd = dirfd(dir_ptr);
 	if (dir_fd == -1) {
@@ -35,12 +35,12 @@ openSubdir(DIR *dir_ptr, string subdir)
 	return subdir_ptr;
 }
 
-void findInDir(DIR *dir_ptr,
-               string currentpath,
+void find_in_dir(DIR *dir_ptr,
+               string current_path,
                string searchterm,
                functionPtr strfind);
 void
-findInDir(DIR *dir_ptr, string currentpath, string searchterm, functionPtr strfind)
+find_in_dir(DIR *dir_ptr, string current_path, string searchterm, functionPtr strfind)
 {
 	struct dirent *dent;
 	while ((dent = readdir(dir_ptr)) != NULL) {
@@ -49,16 +49,16 @@ findInDir(DIR *dir_ptr, string currentpath, string searchterm, functionPtr strfi
 			continue;
 
 		string path;
-		strcpy(path, currentpath);
+		strcpy(path, current_path);
 		strcat(path, dent->d_name);
 		if ((*strfind)(dent->d_name, searchterm) != NULL)
 			printf("%s\n", path);
 
 		if (dent->d_type == DT_DIR) {
 			strcat(path, "/");
-			DIR *subdir_ptr = openSubdir(dir_ptr, dent->d_name);
+			DIR *subdir_ptr = open_subdir(dir_ptr, dent->d_name);
 			if (subdir_ptr != NULL) {
-				findInDir(subdir_ptr, path, searchterm, strfind);
+				find_in_dir(subdir_ptr, path, searchterm, strfind);
 				closedir(subdir_ptr);
 			}
 		}
@@ -90,11 +90,11 @@ main(int argc, char *argv[])
 	DIR *dir_ptr = opendir(".");
 	if (dir_ptr == NULL) {
 		perror("Failed to open current directory");
-		_Exit(EXIT_FAILURE);
+		_exit(EXIT_FAILURE);
 	}
 	string currentpath;
 	strcpy(currentpath, "");
-	findInDir(dir_ptr, currentpath, searchterm, strfind);
+	find_in_dir(dir_ptr, currentpath, searchterm, strfind);
 	closedir(dir_ptr);
 
 	exit(EXIT_SUCCESS);
