@@ -17,7 +17,8 @@ main(int argc, char *argv[])
 	}
 
 	char *args[NARGS + 2];
-	args[0] = malloc(sizeof(char) * (strlen(argv[1]) + 1)); // +1 por el \0 al final del string
+	args[0] = malloc(sizeof(char) * (strlen(argv[1]) +
+	                                 1));  // +1 por el \0 al final del string
 	strcpy(args[0], argv[1]);
 	for (int i = 1; i <= NARGS; i++)
 		args[i] = NULL;
@@ -38,7 +39,8 @@ main(int argc, char *argv[])
 		if (nargs == NARGS) {
 			pid_t cpid = fork();
 			if (cpid == -1)
-				perror("Fork failed"); // No puedo hacer exit del programa xq tengo memoria dinamica alocada
+				perror("Fork failed");  // No puedo hacer exit
+				                        // del programa xq tengo memoria dinamica alocada
 			else if (cpid == 0)
 				execvp(args[0], args);
 			else

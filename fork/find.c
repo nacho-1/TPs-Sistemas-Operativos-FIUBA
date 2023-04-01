@@ -36,9 +36,9 @@ open_subdir(DIR *dir_ptr, string subdir)
 }
 
 void find_in_dir(DIR *dir_ptr,
-               string current_path,
-               string searchterm,
-               function_ptr strfind);
+                 string current_path,
+                 string searchterm,
+                 function_ptr strfind);
 void
 find_in_dir(DIR *dir_ptr, string current_path, string searchterm, function_ptr strfind)
 {

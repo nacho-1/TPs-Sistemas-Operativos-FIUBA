@@ -5,8 +5,7 @@
 #include <unistd.h>
 #include <sys/wait.h>
 
-void
-print_process_info(int fork_ret, int pid, int ppid);
+void print_process_info(int fork_ret, int pid, int ppid);
 void
 print_process_info(int fork_ret, int pid, int ppid)
 {
