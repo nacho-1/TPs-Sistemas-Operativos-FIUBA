@@ -98,9 +98,9 @@ exec_cmd(struct cmd *cmd)
 		// runs a command in background
 		//
 		// Your code here
-		printf("Background process are not yet implemented\n");
+		b = (struct backcmd *) cmd;
+		exec_cmd(b->c);
 		_exit(-1);
-		break;
 	}
 
 	case REDIR: {

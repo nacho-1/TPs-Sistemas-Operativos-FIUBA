@@ -2,6 +2,7 @@
 
 int status = 0;
 struct cmd *parsed_pipe;
+int back_process_count = 0;
 
 // runs the command in 'cmd'
 int
@@ -56,13 +57,27 @@ run_cmd(char *cmd)
 	// 	'print_back_info()'
 	//
 	// Your code here
-
-	// waits for the process to finish
-	waitpid(p, &status, 0);
-
-	print_status_info(parsed);
+	if (parsed->type == BACK) {
+		print_back_info(parsed);
+		back_process_count++;
+	} else {
+		// waits for the process to finish
+		waitpid(p, &status, 0);
+		print_status_info(parsed);
+	}
 
 	free_command(parsed);
+
+	// Try to wait background processes
+	int updated_count = 0;
+	for (int i = 0; i < back_process_count; i++) {
+		pid_t ret = waitpid(-1, &status, WNOHANG);
+		if (ret == 0)
+			updated_count++;
+		else if (ret == -1)
+			perror_debug("Error waiting background processes");
+	}
+	back_process_count = updated_count;
 
 	return 0;
 }
