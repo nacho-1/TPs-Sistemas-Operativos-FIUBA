@@ -63,3 +63,11 @@ fprintf_debug(FILE *file, char *format, ...)
 	return 0;
 #endif
 }
+
+void
+perror_debug(const char *s)
+{
+#ifndef SHELL_NO_INTERACTIVE
+	perror(s);
+#endif
+}
