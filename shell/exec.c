@@ -111,9 +111,25 @@ exec_cmd(struct cmd *cmd)
 		// is greater than zero
 		//
 		// Your code here
-		printf("Redirections are not yet implemented\n");
+		r = (struct execcmd *) cmd;
+		int fd_file;
+		if (strcmp(e->out_file, "") != 0) {
+			fd_file = open(r->out_file, O_CLOEXEC);
+			dup2(fd_file, 1);
+			execvp(r->argv[0], r->argv);
+
+		} else if (strcmp(r->in_file, "") != 0) {
+			fd_file = open(r->in_file, O_CLOEXEC);
+			dup2(fd_file, 0);
+			execvp(r->argv[0], r->argv);
+
+		} else if(strcmp(r->err_file, "") != 0) {
+			fd_file = open(r->err_file, O_CLOEXEC);
+			dup2(fd_file, 2);
+			execvp(r->argv[0], r->argv);
+		}
+		printf_debug("%s: Command not found\n", r->scmd);
 		_exit(-1);
-		break;
 	}
 
 	case PIPE: {
