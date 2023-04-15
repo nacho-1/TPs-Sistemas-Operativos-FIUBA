@@ -4,10 +4,27 @@ int status = 0;
 struct cmd *parsed_pipe;
 int back_process_count = 0;
 
+void
+wait_back_processes()
+{
+	// Try to wait background processes
+	int updated_count = 0;
+	for (int i = 0; i < back_process_count; i++) {
+		pid_t ret = waitpid(-1, &status, WNOHANG);
+		if (ret == 0)
+			updated_count++;
+		else if (ret == -1)
+			perror_debug("Error waiting background processes");
+	}
+	back_process_count = updated_count;
+}
+
 // runs the command in 'cmd'
 int
 run_cmd(char *cmd)
 {
+	wait_back_processes();
+
 	pid_t p;
 	struct cmd *parsed;
 
@@ -38,7 +55,7 @@ run_cmd(char *cmd)
 	// forks and run the command
 	if ((p = fork()) == 0) {
 		// keep a reference
-		// to the parsed pipe cmd
+		// to the parsed pipe cmd,
 		// so it can be freed later
 		if (parsed->type == PIPE)
 			parsed_pipe = parsed;
@@ -67,17 +84,6 @@ run_cmd(char *cmd)
 	}
 
 	free_command(parsed);
-
-	// Try to wait background processes
-	int updated_count = 0;
-	for (int i = 0; i < back_process_count; i++) {
-		pid_t ret = waitpid(-1, &status, WNOHANG);
-		if (ret == 0)
-			updated_count++;
-		else if (ret == -1)
-			perror_debug("Error waiting background processes");
-	}
-	back_process_count = updated_count;
 
 	return 0;
 }
