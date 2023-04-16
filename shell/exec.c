@@ -1,4 +1,5 @@
 #include "exec.h"
+#include "parsing.h"
 
 // sets "key" with the key part of "arg"
 // and null-terminates it
@@ -185,7 +186,7 @@ exec_cmd(struct cmd *cmd)
 		/*
 		 * If execution continues here it means 'execvp' failed and
 		 * returns -1. In that case, error message is printed and
-		 * both file descriptors and the command are freed.
+		 * both file descriptors and the command have to be freed.
 		 */
 		if (failed == -1) {
 			eprint_debug(errno,
@@ -203,7 +204,7 @@ exec_cmd(struct cmd *cmd)
 			if (fd_err > 0) {
 				close(fd_err);
 			}
-			free_command((struct cmd*)r);
+			free_command((struct cmd *) r);
 			exit(1);
 		}
 	}
@@ -212,12 +213,92 @@ exec_cmd(struct cmd *cmd)
 		// pipes two commands
 		//
 		// Your code here
-		printf("Pipes are not yet implemented\n");
+		/*
+		 * The split_line functions with '|' parameter splits
+		 * the command in two. The right part can have more '|'.
+		 * That means that the right part has to be parsed again
+		 * to get the next pipe.
+		 */
+		p = (struct pipecmd *) cmd;
+		int pipe_fds[2];
+		/*
+		 * the flag O_CLOEXEC is useful to close the fd in excevp.
+		 * However, if the function fails there is no way to close it,
+		 * since the recursive call delegates that responsibility
+		 * to the proper case.
+		 */
+		int ret = pipe2(pipe_fds, O_CLOEXEC);
+		if (ret < 0) {
+			eprint_debug(errno,
+			             "Pipe failed."
+			             "Command: %s\n"
+			             "File: %s. Line: %d\n",
+			             p->scmd,
+			             __FILE__,
+			             __LINE__);
+		}
+		/*
+		 * The 'in' pipe is the fd to write.
+		 * The 'out' pipe is the fd to read.
+		 */
+		int in_pipe = pipe_fds[1];
+		int out_pipe = pipe_fds[0];
+		int pid = fork();
 
-		// free the memory allocated
-		// for the pipe tree structure
-		free_command(parsed_pipe);
+		if (pid == 0) {
+			// Child won't write to its parent.
+			close(in_pipe);
 
+			/*
+			 * The stdin of the child process should be
+			 * bound to the 'out' pipe.
+			 */
+			dup2(out_pipe, STDIN_FILENO);
+
+			/*
+			 * Repeat the process until the command
+			 * is not a pipe type. If the excevp fails
+			 * the fd out_pipe is leaked and not closed.
+			 * The reason is EXEC and REDIR close
+			 * their own fds and quit on error but know
+			 * nothing about being a part of a pipe cmd.
+			 * Also, if the redirection changes the STDIN
+			 * the pipe has no effect.
+			 */
+			exec_cmd(parse_line(p->rightcmd->scmd));
+
+			// For 2 process pipe:
+			// exec_cmd(p->rightcmd);
+
+		} else if (pid > 0) {
+			// Parent won't read to its child.
+			close(out_pipe);
+
+			/*
+			 * The stdout of the parent process should be
+			 * bound to the 'in' pipe.
+			 */
+			dup2(in_pipe, STDOUT_FILENO);
+
+			/*
+			 * The left command is either EXEC or REDIR type.
+			 * Why check and repeat code when exec_cmd
+			 * can be used?
+			 * The downside of this is that the remaining fd
+			 * is not closed if execvp fails.
+			 */
+			exec_cmd(p->leftcmd);
+		} else {
+			eprint_debug(errno,
+			             "Fork failed."
+			             "Command: %s\n"
+			             "File: %s. Line: %d\n",
+			             p->scmd,
+			             __FILE__,
+			             __LINE__);
+			free_command(parsed_pipe);
+			exit(1);
+		}
 		break;
 	}
 	}
