@@ -89,6 +89,7 @@ exec_cmd(struct cmd *cmd)
 		// spawns a command
 		//
 		// Your code here
+		printf("entro en exec");
 		e = (struct execcmd *) cmd;
 		execvp(e->argv[0], e->argv);
 		printf_debug("%s: Command not found\n", e->scmd);
@@ -113,17 +114,21 @@ exec_cmd(struct cmd *cmd)
 		// Your code here
 		r = (struct execcmd *) cmd;
 		int fd_file;
-		if (strcmp(e->out_file, "") != 0) {
+		printf("entro en redir, len %lu\n"
+		       "file: %s", strlen(r->out_file), r->out_file);
+		if (strlen(r->out_file) > 0) {
 			fd_file = open(r->out_file, O_CLOEXEC);
+			printf("fd: %d", fd_file);
 			dup2(fd_file, 1);
+			printf("adadada");
 			execvp(r->argv[0], r->argv);
 
-		} else if (strcmp(r->in_file, "") != 0) {
+		} else if (strlen(r->in_file) > 0) {
 			fd_file = open(r->in_file, O_CLOEXEC);
 			dup2(fd_file, 0);
 			execvp(r->argv[0], r->argv);
 
-		} else if(strcmp(r->err_file, "") != 0) {
+		} else if(strlen(r->err_file) > 0) {
 			fd_file = open(r->err_file, O_CLOEXEC);
 			dup2(fd_file, 2);
 			execvp(r->argv[0], r->argv);
