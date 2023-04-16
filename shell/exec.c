@@ -140,7 +140,7 @@ exec_cmd(struct cmd *cmd)
 			 * Mode: 0644   | Gives permission to access the
 			 * 		| file system. Mode has effect if
 			 * 		| O_CREAT or O_TMPFILE is present.
-			 * 		| It is a combination of:
+			 * 		| 0644 is a combination of:
 			 * 		| S_IRUSR (00400) : user has read
 			 * 		| permission.
 			 * 	  	| S_IWUSR (00200) : user has write
@@ -183,7 +183,9 @@ exec_cmd(struct cmd *cmd)
 
 		int failed = execvp(r->argv[0], r->argv);
 		/*
-		 * If execution continues here it means 'execvp' failed.
+		 * If execution continues here it means 'execvp' failed and
+		 * returns -1. In that case, error message is printed and
+		 * both file descriptors and the command are freed.
 		 */
 		if (failed == -1) {
 			eprint_debug(errno,
@@ -201,6 +203,7 @@ exec_cmd(struct cmd *cmd)
 			if (fd_err > 0) {
 				close(fd_err);
 			}
+			free_command((struct cmd*)r);
 			exit(1);
 		}
 	}
