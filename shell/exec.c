@@ -244,10 +244,8 @@ exec_cmd(struct cmd *cmd)
 				 * If the redirection changes the STDIN
 				 * the pipe has no effect.
 				 */
-				exec_cmd(parse_line(p->rightcmd->scmd));
+				exec_cmd(p->rightcmd);
 				close(out_pipe);
-				// For 2 process pipe or with parseline changed:
-				// exec_cmd(p->rightcmd);
 
 			} else if (pid2 > 0) {
 				/*
