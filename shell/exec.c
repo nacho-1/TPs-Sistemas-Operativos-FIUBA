@@ -94,6 +94,7 @@ exec_cmd(struct cmd *cmd)
 		e = (struct execcmd *) cmd;
 		execvp(e->argv[0], e->argv);
 		printf_debug("%s: Command not found\n", e->scmd);
+		free_command(cmd);
 		_exit(-1);
 
 	case BACK: {
