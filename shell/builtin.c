@@ -1,5 +1,7 @@
 #include "builtin.h"
 
+char buf[BUFLEN] = { 0 };
+
 // returns true if the 'exit' call
 // should be performed
 //
@@ -7,9 +9,11 @@
 int
 exit_shell(char *cmd)
 {
-	// Your code here
+	if (strcmp(cmd, "exit") == 0){
+		return true;
+	}
 
-	return 0;
+	return false;
 }
 
 // returns true if "chdir" was performed
@@ -27,9 +31,30 @@ exit_shell(char *cmd)
 int
 cd(char *cmd)
 {
-	// Your code here
-
-	return 0;
+	if ((cmd[0] == 'c') & (cmd[1] == 'd')){
+		if(cmd[2] == '\0'){
+			char *home = getenv("HOME") ;
+			if (chdir(home) < 0) {
+				snprintf(buf, sizeof buf, "cannot cd to %s ", home);
+				perror(buf);
+			}else {
+				snprintf(prompt, sizeof prompt, "(%s)", home);
+				return true;
+			}
+		}else if(cmd[2] == ' '){
+			int cmd_len = strlen(cmd);
+			char dir[cmd_len];
+			strcpy(dir, cmd + 3);
+			if (chdir(dir) < 0) {
+				snprintf(buf, sizeof buf, "cannot cd to %s ", dir);
+				perror(buf);
+			}else {
+				snprintf(prompt, sizeof prompt, "(%s)", get_current_dir_name());
+				return true;
+			}
+		}
+	}
+	return false;
 }
 
 // returns true if 'pwd' was invoked
@@ -40,9 +65,19 @@ cd(char *cmd)
 int
 pwd(char *cmd)
 {
-	// Your code here
+	if (strcmp(cmd, "pwd") == 0){
+		char * curr_dir = get_current_dir_name();
 
-	return 0;
+		if(curr_dir == NULL){
+			snprintf(buf, sizeof buf, "cannot get current directory ");
+			perror(buf);
+		}else{
+			fprintf(stdout, "%s\n", curr_dir);
+			return true;
+		}
+	}
+
+	return false;
 }
 
 // returns true if `history` was invoked
