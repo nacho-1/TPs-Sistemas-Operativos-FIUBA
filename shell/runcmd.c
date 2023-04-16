@@ -61,6 +61,8 @@ run_cmd(char *cmd)
 			parsed_pipe = parsed;
 
 		exec_cmd(parsed);
+		free_command(parsed);
+		_exit(1);
 	}
 
 	// stores the pid of the process

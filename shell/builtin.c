@@ -9,7 +9,7 @@ char buf[BUFLEN] = { 0 };
 int
 exit_shell(char *cmd)
 {
-	if (strcmp(cmd, "exit") == 0){
+	if (strcmp(cmd, "exit") == 0) {
 		return true;
 	}
 
@@ -31,25 +31,28 @@ exit_shell(char *cmd)
 int
 cd(char *cmd)
 {
-	if ((cmd[0] == 'c') & (cmd[1] == 'd')){
-		if(cmd[2] == '\0'){
-			char *home = getenv("HOME") ;
+	if ((cmd[0] == 'c') & (cmd[1] == 'd')) {
+		if (cmd[2] == '\0') {
+			char *home = getenv("HOME");
 			if (chdir(home) < 0) {
 				snprintf(buf, sizeof buf, "cannot cd to %s ", home);
 				perror(buf);
-			}else {
+			} else {
 				snprintf(prompt, sizeof prompt, "(%s)", home);
 				return true;
 			}
-		}else if(cmd[2] == ' '){
+		} else if (cmd[2] == ' ') {
 			int cmd_len = strlen(cmd);
 			char dir[cmd_len];
 			strcpy(dir, cmd + 3);
 			if (chdir(dir) < 0) {
 				snprintf(buf, sizeof buf, "cannot cd to %s ", dir);
 				perror(buf);
-			}else {
-				snprintf(prompt, sizeof prompt, "(%s)", get_current_dir_name());
+			} else {
+				snprintf(prompt,
+				         sizeof prompt,
+				         "(%s)",
+				         get_current_dir_name());
 				return true;
 			}
 		}
@@ -65,13 +68,13 @@ cd(char *cmd)
 int
 pwd(char *cmd)
 {
-	if (strcmp(cmd, "pwd") == 0){
-		char * curr_dir = get_current_dir_name();
+	if (strcmp(cmd, "pwd") == 0) {
+		char *curr_dir = get_current_dir_name();
 
-		if(curr_dir == NULL){
+		if (curr_dir == NULL) {
 			snprintf(buf, sizeof buf, "cannot get current directory ");
 			perror(buf);
-		}else{
+		} else {
 			fprintf(stdout, "%s\n", curr_dir);
 			return true;
 		}
