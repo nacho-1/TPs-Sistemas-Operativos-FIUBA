@@ -141,12 +141,17 @@ exec_cmd(struct cmd *cmd)
 			 * 		| file system. Mode has effect if
 			 * 		| O_CREAT or O_TMPFILE is present.
 			 * 		| It is a combination of:
-			 * 		| S_IRUSR (00400) : user has read permission.
-			 * 		| S_IWUSR (00200) : user has write permission.
-			 * 		| S_IRGRP (00040) : group has read permission.
-			 * 		| S_IROTH (00004) : others have read permission.
+			 * 		| S_IRUSR (00400) : user has read
+			 * 		| permission.
+			 * 	  	| S_IWUSR (00200) : user has write
+			 * 		| permission.
+			 * 		| S_IRGRP (00040) : group has read
+			 * 		| permission.
+			 * 		| S_IROTH (00004) : others have read
+			 * 		| permission.
 			 */
-			fd_out = open_redir_fd(r->out_file, O_CLOEXEC | O_CREAT | O_WRONLY);
+			fd_out = open_redir_fd(r->out_file,
+			                       O_CLOEXEC | O_CREAT | O_WRONLY);
 			dup2(fd_out, STDOUT_FILENO);
 		}
 		if (strlen(r->in_file) > 0) {
@@ -165,7 +170,9 @@ exec_cmd(struct cmd *cmd)
 			if (strcmp(r->err_file, "&1") == 0) {
 				dup2(STDOUT_FILENO, fd_err);
 			} else {
-				fd_err = open_redir_fd(r->err_file, O_CLOEXEC | O_CREAT | O_WRONLY);
+				fd_err = open_redir_fd(r->err_file,
+				                       O_CLOEXEC | O_CREAT |
+				                               O_WRONLY);
 			}
 			/*
 			 * At the end it is needed to point the stderr to the
@@ -182,7 +189,9 @@ exec_cmd(struct cmd *cmd)
 			eprint_debug(errno,
 			             "Command execution failed: %s\n"
 			             "Line: %d. File: %s",
-			             r->scmd, __LINE__, __FILE__);
+			             r->scmd,
+			             __LINE__,
+			             __FILE__);
 			if (fd_out > 0) {
 				close(fd_out);
 			}
