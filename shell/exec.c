@@ -1,5 +1,5 @@
 #include "exec.h"
-#include "parsing.h"
+
 
 // sets "key" with the key part of "arg"
 // and null-terminates it
@@ -49,7 +49,15 @@ get_environ_value(char *arg, char *value, int idx)
 static void
 set_environ_vars(char **eargv, int eargc)
 {
-	// Your code here
+	for (int i = 0; i < eargc; i++) {
+		char *key;
+		char *value;
+		char *env_var = eargv[i];
+		get_environ_key(env_var, key);
+		int idx = block_contains(env_var, '=');
+		get_environ_value(env_var, value, idx);
+		setenv(key, value, 1);
+	}
 }
 
 // opens the file in which the stdin/stdout/stderr
@@ -89,8 +97,27 @@ exec_cmd(struct cmd *cmd)
 	case EXEC:
 		// spawns a command
 		e = (struct execcmd *) cmd;
-		execvp(e->argv[0], e->argv);
-		printf_debug("%s: Command not found\n", e->scmd);
+		if (e->eargc > 0) {
+			int pid = fork();
+			if (pid == 0) {
+				set_environ_vars(e->eargv, e->eargc);
+
+			} else if (pid > 0) {
+				execvp(e->argv[0], e->argv);
+				printf_debug("%s: Command not found\n", e->scmd);
+			} else {
+				eprint_debug(errno,
+				             "Enviroment Var Fork failed."
+				             "Command: %s\n"
+				             "File: %s. Line: %d\n",
+				             e->scmd,
+				             __FILE__,
+				             __LINE__);
+			}
+		} else {
+			execvp(e->argv[0], e->argv);
+			printf_debug("%s: Command not found\n", e->scmd);
+		}
 		return;
 
 	case BACK: {
@@ -225,7 +252,7 @@ exec_cmd(struct cmd *cmd)
 
 		} else if (pid1 > 0) {
 			// Parent process.
-			wait(NULL);
+			waitpid(pid1, NULL, 0);
 			int pid2 = fork();
 			if (pid2 == 0) {
 				// Child 2 won't write to Child 1.
@@ -257,7 +284,7 @@ exec_cmd(struct cmd *cmd)
 				/*
 				 * This process will wait its second child.
 				 */
-				wait(NULL);
+				waitpid(pid2, NULL, 0);
 			} else {
 				eprint_debug(errno,
 				             "Second Fork failed."

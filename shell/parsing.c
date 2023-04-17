@@ -101,8 +101,31 @@ parse_environ_var(struct execcmd *c, char *arg)
 static char *
 expand_environ_var(char *arg)
 {
-	// Your code here
-
+	char *buf;
+	int indx = block_contains(arg, '$');
+	if (indx == 0) {
+		buf = getenv(arg + 1);
+		if (buf) {
+			size_t buf_size = strlen(buf);
+			if ((int) buf_size > ARGSIZE) {
+				int i = (int) buf_size / ARGSIZE + 1;
+				char *temp = (char *) realloc(arg, ARGSIZE * i);
+				if (temp) {
+					arg = temp;
+				} else {
+					printf_debug("Variable"
+					             " expansion error: "
+					             "Realloc failed\n");
+					return "";
+				}
+			}
+			strncpy(arg, buf, buf_size);
+			// Para asegurarme.
+			arg[buf_size] = '\0';
+		} else {
+			return "";
+		}
+	}
 	return arg;
 }
 
@@ -133,8 +156,9 @@ parse_exec(char *buf_cmd)
 			continue;
 
 		tok = expand_environ_var(tok);
-
-		c->argv[argc++] = tok;
+		if (strcmp(tok, "") != 0) {
+			c->argv[argc++] = tok;
+		}
 	}
 
 	c->argv[argc] = (char *) NULL;
