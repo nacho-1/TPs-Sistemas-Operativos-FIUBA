@@ -42,7 +42,7 @@ cd(char *cmd)
 				snprintf(prompt, sizeof prompt, "(%s)", home);
 				return true;
 			}
-		}else if(cmd[2] == SPACE){
+		} else if (cmd[2] == SPACE) {
 			int cmd_len = strlen(cmd);
 			char dir[cmd_len];
 			strcpy(dir, cmd + 3);
@@ -93,24 +93,23 @@ int
 history(char *cmd)
 {
 	// TODO - add optional argument number of commands to show
-	if (strcmp(cmd, "history") == 0){
-		FILE * fp;
-   		char * line = NULL;
-   		size_t len = 0;
-		char *histfile = getenv("HISTFILE");		
+	if (strcmp(cmd, "history") == 0) {
+		FILE *fp;
+		char *line = NULL;
+		size_t len = 0;
+		char *histfile = getenv("HISTFILE");
 
-		if(histfile == NULL){
-			char default_histfile[100] = {'\0'}	;
+		if (histfile == NULL) {
+			char default_histfile[100] = { '\0' };
 			char *home = getenv("HOME");
 			strcat(default_histfile, home);
 			strcat(default_histfile, "/.sisop_history");
 			printf("DEFAULT HISTFILE: %s\n", default_histfile);
 			fp = fopen(default_histfile, "r");
-		}    
-		else{
+		} else {
 			printf("ENV HISTFILE: %s\n", histfile);
 			fp = fopen(histfile, "r");
-		}			
+		}
 
 		if (fp == NULL)
 			exit(EXIT_FAILURE);
