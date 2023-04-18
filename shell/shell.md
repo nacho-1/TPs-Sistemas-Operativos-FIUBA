@@ -43,7 +43,9 @@ archivo out.txt el error que se obtuvo al no encontrar el path ingresado.
 Entonces al hacer _cat out.txt_ la shell nos mostrará "ls: cannot access 
 '/noexiste': No such file or directory"
 
-TODO:  invirtiendo el orden de las redirecciones
+Si se invierten las redirecciones, es decir se ejecuta el comando con _2>&1 >out.txt_ 
+en bash, se escribirá el error por stdout y la salida estándar se escribirá en out.txt.
+
 
 ---
 
