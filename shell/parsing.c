@@ -1,5 +1,5 @@
 #include "parsing.h"
-
+#include "runcmd.h"
 // parses an argument of the command stream input
 static char *
 get_token(char *buf, int idx)
@@ -105,7 +105,9 @@ expand_environ_var(char *arg)
 	int indx = block_contains(arg, '$');
 	if (indx == 0) {
 		if (strcmp(arg, "$?") == 0) {
-			return "not_implemented";
+			char *status_str;
+			sprintf(status_str, "%d", status);
+			return status_str;
 		}
 		buf = getenv(arg + 1);
 		if (buf) {

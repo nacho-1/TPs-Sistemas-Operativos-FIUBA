@@ -1,5 +1,5 @@
 #include "builtin.h"
-
+#include "runcmd.h"
 
 char buf[BUFLEN] = { 0 };
 
@@ -11,6 +11,7 @@ int
 exit_shell(char *cmd)
 {
 	if (strcmp(cmd, "exit") == 0) {
+		status = 1;
 		return true;
 	}
 
@@ -38,6 +39,7 @@ cd(char *cmd)
 			if (chdir(home) < 0) {
 				snprintf(buf, sizeof buf, "cannot cd to %s ", home);
 				perror(buf);
+				status = 1;
 			} else {
 				snprintf(prompt, sizeof prompt, "(%s)", home);
 				return true;
@@ -49,6 +51,7 @@ cd(char *cmd)
 			if (chdir(dir) < 0) {
 				snprintf(buf, sizeof buf, "cannot cd to %s ", dir);
 				perror(buf);
+				status = 1;
 			} else {
 				snprintf(prompt,
 				         sizeof prompt,
@@ -75,6 +78,7 @@ pwd(char *cmd)
 		if (curr_dir == NULL) {
 			snprintf(buf, sizeof buf, "cannot get current directory ");
 			perror(buf);
+			status = 1;
 		} else {
 			fprintf(stdout, "%s\n", curr_dir);
 			return true;
