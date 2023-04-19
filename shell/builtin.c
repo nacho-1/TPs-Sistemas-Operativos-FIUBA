@@ -104,10 +104,10 @@ history(char *cmd)
 		char *histfile = getenv("HISTFILE");
 
 		if (histfile == NULL) {
-			char default_histfile[100] = { '\0' };
+			char default_histfile[FNAMESIZE] = { '\0' };
 			char *home = getenv("HOME");
 			strcat(default_histfile, home);
-			strcat(default_histfile, "/.sisop_history");
+			strcat(default_histfile, "/sisop_history");
 			printf("DEFAULT HISTFILE: %s\n", default_histfile);
 			fp = fopen(default_histfile, "r");
 		} else {
@@ -115,9 +115,10 @@ history(char *cmd)
 			fp = fopen(histfile, "r");
 		}
 
-		if (fp == NULL)
-			exit(EXIT_FAILURE);
-
+		if (fp == NULL) {
+			eprint_debug(errno, "Error opening history file\n");
+			return false;
+		}
 		while (getline(&line, &len, fp) != -1) {
 			printf("%s", line);
 		}
@@ -128,6 +129,5 @@ history(char *cmd)
 
 		return true;
 	}
-
 	return false;
 }

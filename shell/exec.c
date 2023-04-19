@@ -111,31 +111,7 @@ exec_cmd(struct cmd *cmd)
 		             e->scmd,
 		             __FILE__,
 		             __LINE__);
-		/*
-		if (e->eargc > 0) {
-		        int pid = fork();
-		        if (pid == 0) {
-		                set_environ_vars(e->eargv, e->eargc);
-		                execvp(e->argv[0], e->argv);
-		                eprint_debug(errno, "Command execution failed: "
-		                                    "%s\n File: %s. Line: %d",
-		e->scmd, __FILE__, __LINE__); } else if (pid > 0) { waitpid(pid,
-		&status, 0);
-		                // No sé q debería hacer :p
-		        } else {
-		                eprint_debug(errno,
-		                             "Enviroment Var Fork failed."
-		                             "Command: %s\n"
-		                             "File: %s. Line: %d\n",
-		                             e->scmd,
-		                             __FILE__,
-		                             __LINE__);
-		        }
-		} else {
-		        execvp(e->argv[0], e->argv);
-		        printf_debug("%s: Command not found\n", e->scmd);
-		}
-		 */
+
 		return;
 
 	case BACK: {
@@ -217,9 +193,7 @@ exec_cmd(struct cmd *cmd)
 				dup2(fd_err, STDERR_FILENO);
 			}
 		}
-
 		execvp(r->argv[0], r->argv);
-
 
 		return;
 	}
