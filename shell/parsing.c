@@ -104,6 +104,9 @@ expand_environ_var(char *arg)
 	char *buf;
 	int indx = block_contains(arg, '$');
 	if (indx == 0) {
+		if (strcmp(arg, "$?") == 0) {
+			return "not_implemented";
+		}
 		buf = getenv(arg + 1);
 		if (buf) {
 			size_t buf_size = strlen(buf);

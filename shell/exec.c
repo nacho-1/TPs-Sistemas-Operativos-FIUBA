@@ -1,4 +1,5 @@
 #include "exec.h"
+#include "runcmd.h"
 
 
 // sets "key" with the key part of "arg"
@@ -13,8 +14,13 @@ static void
 get_environ_key(char *arg, char *key)
 {
 	int i;
-	for (i = 0; arg[i] != '='; i++)
+	printf("antes de for de get key, arg: %s\n", arg);
+	for (i = 0; arg[i] != '='; i++) {
+		printf("antes de asignacion\n");
 		key[i] = arg[i];
+		printf("en el loop: %s\n", key);
+	}
+
 
 	key[i] = END_STRING;
 }
@@ -50,8 +56,8 @@ static void
 set_environ_vars(char **eargv, int eargc)
 {
 	for (int i = 0; i < eargc; i++) {
-		char *key;
-		char *value;
+		char key[BUFLEN];
+		char value[BUFLEN];
 		char *env_var = eargv[i];
 		get_environ_key(env_var, key);
 		int idx = block_contains(env_var, '=');
@@ -97,27 +103,39 @@ exec_cmd(struct cmd *cmd)
 	case EXEC:
 		// spawns a command
 		e = (struct execcmd *) cmd;
+		set_environ_vars(e->eargv, e->eargc);
+		execvp(e->argv[0], e->argv);
+		eprint_debug(errno,
+		             "Command execution failed: "
+		             "%s\n File: %s. Line: %d",
+		             e->scmd,
+		             __FILE__,
+		             __LINE__);
+		/*
 		if (e->eargc > 0) {
-			int pid = fork();
-			if (pid == 0) {
-				set_environ_vars(e->eargv, e->eargc);
-
-			} else if (pid > 0) {
-				execvp(e->argv[0], e->argv);
-				printf_debug("%s: Command not found\n", e->scmd);
-			} else {
-				eprint_debug(errno,
-				             "Enviroment Var Fork failed."
-				             "Command: %s\n"
-				             "File: %s. Line: %d\n",
-				             e->scmd,
-				             __FILE__,
-				             __LINE__);
-			}
+		        int pid = fork();
+		        if (pid == 0) {
+		                set_environ_vars(e->eargv, e->eargc);
+		                execvp(e->argv[0], e->argv);
+		                eprint_debug(errno, "Command execution failed: "
+		                                    "%s\n File: %s. Line: %d",
+		e->scmd, __FILE__, __LINE__); } else if (pid > 0) { waitpid(pid,
+		&status, 0);
+		                // No sé q debería hacer :p
+		        } else {
+		                eprint_debug(errno,
+		                             "Enviroment Var Fork failed."
+		                             "Command: %s\n"
+		                             "File: %s. Line: %d\n",
+		                             e->scmd,
+		                             __FILE__,
+		                             __LINE__);
+		        }
 		} else {
-			execvp(e->argv[0], e->argv);
-			printf_debug("%s: Command not found\n", e->scmd);
+		        execvp(e->argv[0], e->argv);
+		        printf_debug("%s: Command not found\n", e->scmd);
 		}
+		 */
 		return;
 
 	case BACK: {
@@ -191,7 +209,7 @@ exec_cmd(struct cmd *cmd)
 				             "Error Redirection cancelled.\n"
 				             "File: %s. Line: %d\n",
 				             r->err_file,
-				             fd_in,
+				             fd_err,
 				             __FILE__,
 				             __LINE__);
 				return;
@@ -252,7 +270,7 @@ exec_cmd(struct cmd *cmd)
 
 		} else if (pid1 > 0) {
 			// Parent process.
-			waitpid(pid1, NULL, 0);
+			waitpid(pid1, &status, 0);
 			int pid2 = fork();
 			if (pid2 == 0) {
 				// Child 2 won't write to Child 1.
@@ -284,7 +302,7 @@ exec_cmd(struct cmd *cmd)
 				/*
 				 * This process will wait its second child.
 				 */
-				waitpid(pid2, NULL, 0);
+				waitpid(pid2, &status, 0);
 			} else {
 				eprint_debug(errno,
 				             "Second Fork failed."
