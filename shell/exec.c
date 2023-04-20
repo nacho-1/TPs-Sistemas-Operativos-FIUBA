@@ -197,7 +197,7 @@ exec_cmd(struct cmd *cmd)
 		p = (struct pipecmd *) cmd;
 
 		int pipe_fds[2];
-		int ret = pipe2(pipe_fds, O_CLOEXEC);
+		int ret = pipe(pipe_fds); // O_CLOEXEC works weirdly with dup2 so I just close them manually
 		if (ret < 0) {
 			eprint_debug(errno,
 			             "Pipe failed."
@@ -223,11 +223,11 @@ exec_cmd(struct cmd *cmd)
 			             __FILE__,
 			             __LINE__);
 		} else if (left_pid == 0) {
+			close(read_pipe);
 			dup2(write_pipe, STDOUT_FILENO);
+			close(write_pipe);
 			exec_cmd(p->leftcmd);
 
-			close(read_pipe);
-			close(write_pipe);
 			free_command(cmd);
 			fflush(stdout);
 			_exit(EXIT_FAILURE);
@@ -243,11 +243,11 @@ exec_cmd(struct cmd *cmd)
 			             __FILE__,
 			             __LINE__);
 		} else if (right_pid == 0) {
+			close(write_pipe);
 			dup2(read_pipe, STDIN_FILENO);
+			close(read_pipe);
 			exec_cmd(p->rightcmd);
 
-			close(read_pipe);
-			close(write_pipe);
 			free_command(cmd);
 			fflush(stdout);
 			_exit(EXIT_FAILURE);
