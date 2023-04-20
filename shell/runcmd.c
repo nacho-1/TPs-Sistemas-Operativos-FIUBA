@@ -55,6 +55,7 @@ run_cmd(char *cmd)
 	} else {
 		eprint_debug(errno, "Failure opening the history file. The command won't be saved.\n");
 	}
+
 	wait_back_processes();
 
 	pid_t p;
@@ -86,15 +87,10 @@ run_cmd(char *cmd)
 
 	// forks and run the command
 	if ((p = fork()) == 0) {
-		// keep a reference
-		// to the parsed pipe cmd,
-		// so it can be freed later
-		if (parsed->type == PIPE)
-			parsed_pipe = parsed;
-
 		exec_cmd(parsed);
 		free_command(parsed);
-		_exit(1);
+		fflush(stdout);
+		_exit(EXIT_FAILURE);
 	}
 
 	// stores the pid of the process

@@ -105,23 +105,18 @@ exec_cmd(struct cmd *cmd)
 		e = (struct execcmd *) cmd;
 		set_environ_vars(e->eargv, e->eargc);
 		execvp(e->argv[0], e->argv);
-		eprint_debug(errno,
-		             "Command execution failed: "
+		eprint_debug(errno,"Command execution failed: "
 		             "%s\n File: %s. Line: %d",
 		             e->scmd,
 		             __FILE__,
 		             __LINE__);
-
 		return;
-
-	case BACK: {
+	case BACK:
 		// runs a command in background
 		b = (struct backcmd *) cmd;
 		exec_cmd(b->c);
 		return;
-	}
-
-	case REDIR: {
+	case REDIR:
 		// changes the input/output/stderr flow
 		//
 		// To check if a redirection has to be performed
@@ -134,9 +129,7 @@ exec_cmd(struct cmd *cmd)
 		int fd_err;
 		int fd_in;
 		if (strlen(r->out_file) > 0) {
-			fd_out = open_redir_fd(r->out_file,
-			                       O_CLOEXEC | O_CREAT | O_WRONLY |
-			                               O_TRUNC);
+			fd_out = open_redir_fd(r->out_file,O_CLOEXEC | O_CREAT | O_WRONLY | O_TRUNC);
 			if (fd_out < 0) {
 				eprint_debug(errno,
 				             "Error opening file: %s."
@@ -148,10 +141,10 @@ exec_cmd(struct cmd *cmd)
 				             __FILE__,
 				             __LINE__);
 				return;
-			} else {
-				dup2(fd_out, STDOUT_FILENO);
 			}
+			dup2(fd_out, STDOUT_FILENO);
 		}
+
 		if (strlen(r->in_file) > 0) {
 			fd_in = open_redir_fd(r->in_file, O_CLOEXEC | O_RDONLY);
 			if (fd_in < 0) {
@@ -165,10 +158,10 @@ exec_cmd(struct cmd *cmd)
 				             __FILE__,
 				             __LINE__);
 				return;
-			} else {
-				dup2(fd_in, STDIN_FILENO);
 			}
+			dup2(fd_in, STDIN_FILENO);
 		}
+
 		if (strlen(r->err_file) > 0) {
 			if (strcmp(r->err_file, "&1") == 0) {
 				dup2(STDOUT_FILENO, fd_err);
@@ -177,7 +170,6 @@ exec_cmd(struct cmd *cmd)
 				                       O_CLOEXEC | O_CREAT |
 				                               O_WRONLY | O_TRUNC);
 			}
-
 			if (fd_err < 0) {
 				eprint_debug(errno,
 				             "Error opening file: %s."
@@ -189,21 +181,22 @@ exec_cmd(struct cmd *cmd)
 				             __FILE__,
 				             __LINE__);
 				return;
-			} else {
-				dup2(fd_err, STDERR_FILENO);
 			}
+			dup2(fd_err, STDERR_FILENO);
 		}
+
 		execvp(r->argv[0], r->argv);
-
+		eprint_debug(errno,"Command execution failed: "
+		                    "%s\n File: %s. Line: %d",
+		             r->scmd,
+		             __FILE__,
+		             __LINE__);
 		return;
-	}
-
-	case PIPE: {
+	case PIPE:
 		// pipes two commands
-
 		p = (struct pipecmd *) cmd;
-		int pipe_fds[2];
 
+		int pipe_fds[2];
 		int ret = pipe2(pipe_fds, O_CLOEXEC);
 		if (ret < 0) {
 			eprint_debug(errno,
@@ -215,79 +208,13 @@ exec_cmd(struct cmd *cmd)
 			             __LINE__);
 			return;
 		}
+		int read_pipe = pipe_fds[0];
+		int write_pipe = pipe_fds[1];
 
-		int in_pipe = pipe_fds[1];
-		int out_pipe = pipe_fds[0];
+		int left_pid, right_pid;
 
-		/*
-		 * Two childs will be created from the same parent.
-		 * These will communicate with each other via pipes.
-		 * The first will write and the second will read.
-		 */
-		int pid1 = fork();
-		if (pid1 == 0) {
-			// Child 1 won't read from Child 2.
-			close(out_pipe);
-
-			/*
-			 * The stdout of the parent process should be
-			 * bound to the 'in' pipe.
-			 */
-			dup2(in_pipe, STDOUT_FILENO);
-
-			exec_cmd(p->leftcmd);
-			/*
-			 * If the execution of the command fails, then
-			 * the flow will continue here.
-			 */
-			close(in_pipe);
-
-		} else if (pid1 > 0) {
-			// Parent process.
-
-			int pid2 = fork();
-			if (pid2 == 0) {
-				// Child 2 won't write to Child 1.
-				close(in_pipe);
-
-				/*
-				 * The stdin of the child 2 process should be
-				 * bound to the 'out' pipe which is the stdout
-				 * of the child 1 process.
-				 */
-				dup2(out_pipe, STDIN_FILENO);
-
-				/*
-				 * Repeat the process until the command
-				 * is not a pipe type.
-				 * If the redirection changes the STDIN
-				 * the pipe has no effect.
-				 */
-				exec_cmd(p->rightcmd);
-				close(out_pipe);
-
-			} else if (pid2 > 0) {
-				/*
-				 * Parent created both child processes so
-				 * there is no need for the fds of the pipe.
-				 */
-				close(in_pipe);
-				close(out_pipe);
-				/*
-				 * This process will wait its second child.
-				 */
-				waitpid(pid2, &status, 0);
-				waitpid(pid1, &status, 0);
-			} else {
-				eprint_debug(errno,
-				             "Second Fork failed."
-				             "Command: %s\n"
-				             "File: %s. Line: %d\n",
-				             p->scmd,
-				             __FILE__,
-				             __LINE__);
-			}
-		} else {
+		left_pid = fork();
+		if (left_pid == -1) {
 			eprint_debug(errno,
 			             "First Fork failed."
 			             "Command: %s\n"
@@ -295,8 +222,57 @@ exec_cmd(struct cmd *cmd)
 			             p->scmd,
 			             __FILE__,
 			             __LINE__);
+		} else if (left_pid == 0) {
+			dup2(write_pipe, STDOUT_FILENO);
+			exec_cmd(p->leftcmd);
+
+			close(read_pipe);
+			close(write_pipe);
+			free_command(cmd);
+			fflush(stdout);
+			_exit(EXIT_FAILURE);
 		}
-		return;
-	}
+
+		right_pid = fork();
+		if (right_pid == -1) {
+			eprint_debug(errno,
+			             "Second Fork failed."
+			             "Command: %s\n"
+			             "File: %s. Line: %d\n",
+			             p->scmd,
+			             __FILE__,
+			             __LINE__);
+		} else if (right_pid == 0) {
+			dup2(read_pipe, STDIN_FILENO);
+			exec_cmd(p->rightcmd);
+
+			close(read_pipe);
+			close(write_pipe);
+			free_command(cmd);
+			fflush(stdout);
+			_exit(EXIT_FAILURE);
+		}
+
+		close(read_pipe);
+		close(write_pipe);
+		free_command(cmd);
+
+		int left_status, right_status;
+		if (left_pid != -1)
+			waitpid(left_pid, &left_status, 0);
+		if (right_pid != -1)
+			waitpid(right_pid, &right_status, 0);
+
+		if (left_status != EXIT_SUCCESS || right_status != EXIT_SUCCESS)
+			exit(EXIT_FAILURE);
+
+		exit(EXIT_SUCCESS);
 	}
 }
+
+/* Apendice sobre redirs y pipes
+ * dup2 puede fallar y no estamos haciendo ningun chequeo aca.
+ * Mismo con close
+ * El programa en general no hace muchos chequeos asiq por ahora lo dejamos asi
+ * pero que quede notado.
+ */
