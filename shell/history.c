@@ -20,10 +20,8 @@ load_history()
 		char *home = getenv("HOME");
 		strcat(default_histfile, home);
 		strcat(default_histfile, "/.sisop_history");
-		printf("DEFAULT HISTFILE: %s\n", default_histfile);
 		fp = fopen(default_histfile, "r");
 	} else {
-		printf("ENV HISTFILE: %s\n", histfile);
 		fp = fopen(histfile, "r");
 	}
 	if (fp == NULL) {
