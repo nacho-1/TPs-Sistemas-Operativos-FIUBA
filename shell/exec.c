@@ -244,7 +244,7 @@ exec_cmd(struct cmd *cmd)
 
 		} else if (pid1 > 0) {
 			// Parent process.
-			waitpid(pid1, &status, 0);
+
 			int pid2 = fork();
 			if (pid2 == 0) {
 				// Child 2 won't write to Child 1.
@@ -277,6 +277,7 @@ exec_cmd(struct cmd *cmd)
 				 * This process will wait its second child.
 				 */
 				waitpid(pid2, &status, 0);
+				waitpid(pid1, &status, 0);
 			} else {
 				eprint_debug(errno,
 				             "Second Fork failed."

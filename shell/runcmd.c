@@ -25,10 +25,8 @@ run_cmd(char *cmd)
 {
 	// Se guarda en el historial antes de parsearlo.
 	char *histfile;
-	// int hist_fd;
 	FILE *fp = NULL;
 	if ((histfile = getenv("HISTFILE"))) {
-		// hist_fd = open(histfile, )
 		fp = fopen(histfile, "a");
 	} else {
 		char *home = getenv("HOME");
