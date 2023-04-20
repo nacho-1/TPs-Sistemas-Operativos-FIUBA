@@ -8,4 +8,6 @@
 
 struct cmd *parse_line(char *b);
 
+char *get_token(char *buf, int idx);
+
 #endif  // PARSING_H

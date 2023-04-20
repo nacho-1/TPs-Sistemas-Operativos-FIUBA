@@ -1,7 +1,7 @@
 #include "parsing.h"
 #include "runcmd.h"
 // parses an argument of the command stream input
-static char *
+char *
 get_token(char *buf, int idx)
 {
 	char *tok;

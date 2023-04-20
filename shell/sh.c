@@ -2,8 +2,11 @@
 #include "types.h"
 #include "readline.h"
 #include "runcmd.h"
+#include "history.h"
+
 
 char prompt[PRMTLEN] = { 0 };
+
 
 // runs a shell command
 static void
@@ -13,6 +16,8 @@ run_shell()
 
 	while ((cmd = read_line(prompt)) != NULL)
 		if (run_cmd(cmd) == EXIT_SHELL)
+			// TODO - save command history before closing shell
+			// save_history();
 			return;
 }
 
@@ -30,6 +35,8 @@ init_shell()
 	} else {
 		snprintf(prompt, sizeof prompt, "(%s)", home);
 	}
+
+	load_history();
 }
 
 int

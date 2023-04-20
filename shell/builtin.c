@@ -96,38 +96,48 @@ pwd(char *cmd)
 int
 history(char *cmd)
 {
-	// TODO - add optional argument number of commands to show
-	if (strcmp(cmd, "history") == 0) {
-		FILE *fp;
-		char *line = NULL;
-		size_t len = 0;
-		char *histfile = getenv("HISTFILE");
+	size_t idx;
+	char *command = get_token(cmd, 0);
 
-		if (histfile == NULL) {
-			char default_histfile[FNAMESIZE] = { '\0' };
-			char *home = getenv("HOME");
-			strcat(default_histfile, home);
-			strcat(default_histfile, "/sisop_history");
-			printf("DEFAULT HISTFILE: %s\n", default_histfile);
-			fp = fopen(default_histfile, "r");
-		} else {
-			printf("ENV HISTFILE: %s\n", histfile);
-			fp = fopen(histfile, "r");
+	if (strcmp(command, "history") == 0) {
+		idx = strlen(command);
+		if (cmd[idx] == END_STRING) {
+			// print all history commands
+			int i = 0;
+			while (fcontent[i] != NULL) {
+				printf("%d: %s", i, fcontent[i]);
+				i++;
+			}
+			return true;
 		}
 
-		if (fp == NULL) {
-			eprint_debug(errno, "Error opening history file\n");
-			return false;
-		}
-		while (getline(&line, &len, fp) != -1) {
-			printf("%s", line);
-		}
+		idx++;
 
-		fclose(fp);
-		if (line)
-			free(line);
+		char *arg = get_token(cmd, idx);
 
-		return true;
+		for (size_t i = 0; i < strlen(arg); i++) {
+			if (!isdigit(arg[i])) {
+				return false;
+			}
+		}
+		idx = idx + strlen(arg);
+		if (cmd[idx] == END_STRING) {
+			// print latest n commands
+			int n = atoi(arg);
+			int command_lines = 0;
+			while (fcontent[command_lines++]) {
+			}
+			command_lines -= 1;
+
+			if (n > command_lines) {
+				n = command_lines;
+			}
+			for (int i = (command_lines - n); i < command_lines; i++) {
+				printf("%d: %s", i, fcontent[i]);
+			}
+
+			return true;
+		}
 	}
 	return false;
 }

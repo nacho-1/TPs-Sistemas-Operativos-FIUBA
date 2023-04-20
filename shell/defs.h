@@ -14,6 +14,7 @@
 #include <signal.h>
 #include <sys/wait.h>
 #include <sys/types.h>
+#include <ctype.h>
 
 #ifndef SHELL_NO_COLORS
 // color scape strings
@@ -47,5 +48,11 @@
 #define WRITE 1
 
 #define EXIT_SHELL 1
+
+// History memory alloc
+#define MAX_HISTORY_LINE_SIZE 1024
+#define INITIAL_HISTORY_LINES 50
+#define HISTORY_GROWING_FACTOR 2
+
 
 #endif  // DEFS_H
