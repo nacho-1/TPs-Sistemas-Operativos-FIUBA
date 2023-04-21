@@ -1,6 +1,5 @@
 CFLAGS := -ggdb3 -Wall -Wextra -std=gnu11
 CFLAGS += -Wmissing-prototypes
-LIBFLAGS := -shared -fPIC $(CFLAGS)
 
 # To compile using different strategies:
 # - For First Free
@@ -14,33 +13,22 @@ ifdef USE_BF
 	CFLAGS += -D BEST_FIT
 endif
 
-EXECD := test-d
-EXECS := test-s
-LIBNAME := libmalloc.so
-SRCS := $(wildcard *.c)
+TESTS := malloc.test
+SRCS := $(filter-out malloc.test.c, $(wildcard *.c))
 OBJS := $(SRCS:%.c=%.o)
 
-all: $(EXECS) $(EXECD)
+all: $(TESTS)
 
-$(EXECS): $(OBJS)
+%.test: $(OBJS) %.test.o
 	cc $(CFLAGS) -o $@ $^
 
-$(EXECD): $(filter-out malloc.o, $(OBJS))
-	cc $(CFLAGS) -o $@ $^
-
-$(LIBNAME): malloc.c printfmt.o
-	cc $(LIBFLAGS) -o $@ $^
-
-run-d: $(EXECD) $(LIBNAME)
-	./run-d.sh
-
-run-s: $(EXECS)
-	./run-s.sh
+test: $(TESTS)
+	./$(TESTS)
 
 format: .clang-files .clang-format
 	xargs -r clang-format -i <$<
 
 clean:
-	rm -f *.o $(EXECS) $(EXECD) $(LIBNAME)
+	rm -f *.o $(TESTS)
 
-.PHONY: clean format run-d run-s
+.PHONY: clean format test
