@@ -27,34 +27,6 @@ run_cmd(char *cmd)
 	//        y la escritura en archivo se puede hacer al final de la sesion
 	// TODO - si es spcae / end_of_line no guardar en historial
 
-	// Se guarda en el historial antes de parsearlo.
-	char *histfile;
-	FILE *fp = NULL;
-	if ((histfile = getenv("HISTFILE"))) {
-		fp = fopen(histfile, "a");
-	} else {
-		char *home = getenv("HOME");
-		if (home) {
-			char default_path[FNAMESIZE];
-			char *file_path = "/.sisop_history";
-			strncat(default_path, home, strlen(home));
-			strncat(default_path, file_path, strlen(file_path));
-			setenv("HISTFILE", default_path, 0);
-			fp = fopen(default_path, "a");
-		}
-	}
-	if (fp) {
-		fwrite(cmd, sizeof(char), strlen(cmd), fp);
-		fwrite("\n", sizeof(char), 1, fp);
-		fclose(fp);
-		if (ferror(fp) != 0) {
-			printf_debug("Failure writing the history file. The "
-			             "command won't be saved.\n");
-		}
-
-	} else {
-		eprint_debug(errno, "Failure opening the history file. The command won't be saved.\n");
-	}
 
 	wait_back_processes();
 
@@ -65,6 +37,8 @@ run_cmd(char *cmd)
 	// just print the prompt again
 	if (cmd[0] == END_STRING)
 		return 0;
+
+	save_command(cmd);
 
 	// "history" built-in call
 	if (history(cmd))

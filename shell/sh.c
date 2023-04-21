@@ -7,7 +7,6 @@
 
 char prompt[PRMTLEN] = { 0 };
 
-
 // runs a shell command
 static void
 run_shell()
