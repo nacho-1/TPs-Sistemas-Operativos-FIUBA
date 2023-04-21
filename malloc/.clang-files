@@ -2,4 +2,6 @@ malloc.c
 malloc.h
 printfmt.c
 printfmt.h
-test.c
+testlib.c
+testlib.h
+malloc.test.c
