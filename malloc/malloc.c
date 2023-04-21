@@ -24,14 +24,6 @@ int amount_of_mallocs = 0;
 int amount_of_frees = 0;
 int requested_memory = 0;
 
-static void
-print_statistics(void)
-{
-	printfmt("mallocs:   %d\n", amount_of_mallocs);
-	printfmt("frees:     %d\n", amount_of_frees);
-	printfmt("requested: %d\n", requested_memory);
-}
-
 // finds the next free region
 // that holds the requested size
 //
@@ -77,7 +69,6 @@ grow_heap(size_t size)
 	// first time here
 	if (!region_free_list) {
 		region_free_list = curr;
-		atexit(print_statistics);
 	}
 
 	curr->size = size;
@@ -86,6 +77,8 @@ grow_heap(size_t size)
 
 	return curr;
 }
+
+/// Public API of malloc library ///
 
 void *
 malloc(size_t size)
@@ -142,4 +135,12 @@ realloc(void *ptr, size_t size)
 	// Your code here
 
 	return NULL;
+}
+
+void
+get_stats(struct malloc_stats *stats)
+{
+	stats->mallocs = amount_of_mallocs;
+	stats->frees = amount_of_frees;
+	stats->requested_memory = requested_memory;
 }
