@@ -26,7 +26,7 @@ load_history()
 		fp = fopen(histfile, "a+");
 	}
 	if (fp == NULL) {
-		printf("Error opening history file\n");
+		eprint_debug(errno,"Error opening history file\n");
 		return;
 	}
 
@@ -56,7 +56,6 @@ load_history()
 
 void _save_command_in_memory(char * cmd){
 
-
 	if (pos >= alloc_size) {
 			fcontent = (char **) realloc(
 			        fcontent,
@@ -64,11 +63,15 @@ void _save_command_in_memory(char * cmd){
 			                sizeof(char *));
 			alloc_size = alloc_size * HISTORY_GROWING_FACTOR;
 		}
-	fcontent[pos] = (char *) malloc((sizeof(cmd) + 2) * sizeof(char));
-	strcpy(fcontent[pos], cmd);
-	strcat(fcontent[pos], "\n\0");
 
-	pos++;
+
+
+	fcontent[pos] = (char *) malloc((strlen(cmd) + 2) * sizeof(char));
+
+	strcpy(fcontent[pos], cmd);
+
+	pos++;	
+	fcontent[pos] = NULL;
 
 	return;
 
@@ -88,6 +91,7 @@ void _save_command_in_file(char * cmd){
 		strcat(default_histfile, home);
 		strcat(default_histfile, "/.sisop_history");
 		fp = fopen(default_histfile, "a");
+	
 	} else {
 		fp = fopen(histfile, "a");
 	}
