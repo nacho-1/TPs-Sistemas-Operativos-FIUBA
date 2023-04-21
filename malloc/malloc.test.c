@@ -10,8 +10,7 @@ successful_malloc_returns_non_null_pointer(void)
 {
 	char *var = malloc(100);
 
-	ASSERT_TRUE("successful malloc returns non null pointer",
-	            var != NULL);
+	ASSERT_TRUE("successful malloc returns non null pointer", var != NULL);
 
 	free(var);
 }
