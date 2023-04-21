@@ -12,22 +12,10 @@ Utilizar el archivo `malloc.md` provisto en el repositorio
 $ make
 ```
 
-## Compilar la librería
+## Ejectar pruebas
 
 ```bash
-$ make libmalloc.so
-```
-
-## Ejecutar prueba (estática)
-
-```bash
-$ make run-s
-```
-
-## Ejecutar prueba (dinámica)
-
-```bash
-$ make run-d
+$ make test
 ```
 
 ## Linter
