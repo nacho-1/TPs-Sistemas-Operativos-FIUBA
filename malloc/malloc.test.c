@@ -6,6 +6,17 @@
 #include "malloc.h"
 
 static void
+successful_malloc_returns_non_null_pointer(void)
+{
+	char *var = malloc(100);
+
+	ASSERT_TRUE("successful malloc returns non null pointer",
+	            var != NULL);
+
+	free(var);
+}
+
+static void
 correct_copied_value(void)
 {
 	char *test_string = "FISOP malloc is working!";
@@ -66,6 +77,7 @@ correct_amount_of_requested_memory(void)
 int
 main(void)
 {
+	run_test(successful_malloc_returns_non_null_pointer);
 	run_test(correct_copied_value);
 	run_test(correct_amount_of_mallocs);
 	run_test(correct_amount_of_frees);
