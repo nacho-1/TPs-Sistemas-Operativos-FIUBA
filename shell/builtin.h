@@ -5,7 +5,7 @@
 
 extern char prompt[PRMTLEN];
 
-extern char **fcontent;
+extern char **history_arr;
 
 int cd(char *cmd);
 

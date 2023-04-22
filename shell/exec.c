@@ -105,7 +105,8 @@ exec_cmd(struct cmd *cmd)
 		e = (struct execcmd *) cmd;
 		set_environ_vars(e->eargv, e->eargc);
 		execvp(e->argv[0], e->argv);
-		eprint_debug(errno,"Command execution failed: "
+		eprint_debug(errno,
+		             "Command execution failed: "
 		             "%s\n File: %s. Line: %d",
 		             e->scmd,
 		             __FILE__,
@@ -129,7 +130,9 @@ exec_cmd(struct cmd *cmd)
 		int fd_err;
 		int fd_in;
 		if (strlen(r->out_file) > 0) {
-			fd_out = open_redir_fd(r->out_file,O_CLOEXEC | O_CREAT | O_WRONLY | O_TRUNC);
+			fd_out = open_redir_fd(r->out_file,
+			                       O_CLOEXEC | O_CREAT | O_WRONLY |
+			                               O_TRUNC);
 			if (fd_out < 0) {
 				eprint_debug(errno,
 				             "Error opening file: %s."
@@ -186,8 +189,9 @@ exec_cmd(struct cmd *cmd)
 		}
 
 		execvp(r->argv[0], r->argv);
-		eprint_debug(errno,"Command execution failed: "
-		                    "%s\n File: %s. Line: %d",
+		eprint_debug(errno,
+		             "Command execution failed: "
+		             "%s\n File: %s. Line: %d",
 		             r->scmd,
 		             __FILE__,
 		             __LINE__);
@@ -197,7 +201,8 @@ exec_cmd(struct cmd *cmd)
 		p = (struct pipecmd *) cmd;
 
 		int pipe_fds[2];
-		int ret = pipe(pipe_fds); // O_CLOEXEC works weirdly with dup2 so I just close them manually
+		int ret = pipe(
+		        pipe_fds);  // O_CLOEXEC works weirdly with dup2 so I just close them manually
 		if (ret < 0) {
 			eprint_debug(errno,
 			             "Pipe failed."

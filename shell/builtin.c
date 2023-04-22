@@ -104,8 +104,8 @@ history(char *cmd)
 		if (cmd[idx] == END_STRING) {
 			// print all history commands
 			int i = 0;
-			while (fcontent[i] != NULL) {
-				printf("%d: %s", i, fcontent[i]);
+			while (history_arr[i] != NULL) {
+				printf("%d: %s", i, history_arr[i]);
 				i++;
 			}
 			return true;
@@ -125,7 +125,7 @@ history(char *cmd)
 			// print latest n commands
 			int n = atoi(arg);
 			int command_lines = 0;
-			while (fcontent[command_lines++]) {
+			while (history_arr[command_lines++]) {
 			}
 			command_lines -= 1;
 
@@ -133,7 +133,7 @@ history(char *cmd)
 				n = command_lines;
 			}
 			for (int i = (command_lines - n); i < command_lines; i++) {
-				printf("%d: %s", i, fcontent[i]);
+				printf("%d: %s", i, history_arr[i]);
 			}
 
 			return true;

@@ -14,10 +14,10 @@ run_shell()
 	char *cmd;
 
 	while ((cmd = read_line(prompt)) != NULL)
-		if (run_cmd(cmd) == EXIT_SHELL)
-			// TODO - save command history before closing shell
-			// save_history();
+		if (run_cmd(cmd) == EXIT_SHELL) {
+			free_history();
 			return;
+		}
 }
 
 // initializes the shell

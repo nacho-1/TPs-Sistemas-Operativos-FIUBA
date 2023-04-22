@@ -1,7 +1,7 @@
 #include "history.h"
 
 
-char ** fcontent;
+char ** history_arr;
 int alloc_size;
 int pos = 0;
 
@@ -11,7 +11,7 @@ load_history()
 {
 	FILE *fp;
 
-	fcontent = (char **) malloc((INITIAL_HISTORY_LINES + 1) * sizeof(char *));
+	history_arr = (char **) malloc((INITIAL_HISTORY_LINES + 1) * sizeof(char *));
 	alloc_size = INITIAL_HISTORY_LINES + 1;
 	char line[MAX_HISTORY_LINE_SIZE + 1];
 
@@ -33,19 +33,19 @@ load_history()
 	// read file line by line with fgets()
 	while (fgets(line, sizeof(line) * sizeof(char), fp) != NULL) {
 		if (pos >= alloc_size) {
-			fcontent = (char **) realloc(
-			        fcontent,
+			history_arr = (char **) realloc(
+			        history_arr,
 			        alloc_size * HISTORY_GROWING_FACTOR *
 			                sizeof(char *));
 			alloc_size = alloc_size * HISTORY_GROWING_FACTOR;
 		}
 
-		fcontent[pos] = (char *) malloc(sizeof(line) * sizeof(char));
-		strcpy(fcontent[pos], line);
+		history_arr[pos] = (char *) malloc(sizeof(line) * sizeof(char));
+		strcpy(history_arr[pos], line);
 		pos++;
 	}
 
-	fcontent[pos] = NULL;
+	history_arr[pos] = NULL;
 
 	fclose(fp);
 
@@ -57,8 +57,8 @@ load_history()
 void _save_command_in_memory(char * cmd){
 
 	if (pos >= alloc_size) {
-			fcontent = (char **) realloc(
-			        fcontent,
+			history_arr = (char **) realloc(
+			        history_arr,
 			        alloc_size * HISTORY_GROWING_FACTOR *
 			                sizeof(char *));
 			alloc_size = alloc_size * HISTORY_GROWING_FACTOR;
@@ -66,12 +66,12 @@ void _save_command_in_memory(char * cmd){
 
 
 
-	fcontent[pos] = (char *) malloc((strlen(cmd) + 2) * sizeof(char));
+	history_arr[pos] = (char *) malloc((strlen(cmd) + 2) * sizeof(char));
 
-	strcpy(fcontent[pos], cmd);
+	strcpy(history_arr[pos], cmd);
 
 	pos++;	
-	fcontent[pos] = NULL;
+	history_arr[pos] = NULL;
 
 	return;
 
@@ -80,7 +80,6 @@ void _save_command_in_memory(char * cmd){
 
 
 void _save_command_in_file(char * cmd){
-
 
 	FILE *fp;
 
@@ -120,4 +119,16 @@ void save_command(char * cmd){
 	_save_command_in_file(cmd);
 
 	return;
+}
+
+
+void
+free_history()
+{
+	int i=0;
+	while(history_arr[i] != NULL){
+		free(history_arr[i++]);
+	}
+	free(history_arr);
+
 }
