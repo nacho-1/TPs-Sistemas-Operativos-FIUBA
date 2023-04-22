@@ -16,6 +16,20 @@ writeChar(char c, size_t *row, size_t *col, int MAX_COL)
 	}
 }
 
+void delete(int *i, size_t *row, size_t *col, int MAX_COL) {
+	if (*i <= 0) return;
+
+	buffer[--(*i)] = 0;
+
+	if ((*col)-- == 0) {
+		(*row)--;
+		(*col) = MAX_COL - 1;
+		printf_debug("\b \b\b \b");
+		printf_debug("\b \b\b \b\033[A\033[%iC", MAX_COL + 2);
+	}
+	printf_debug("\b \b");
+}
+
 // reads a line from the standard input
 // and prints the prompt
 char *
@@ -44,6 +58,9 @@ read_line(const char *prompt)
 		case EOF:
 		case 4:  // EOF | CTRL+D
 			return NULL;
+		case 127:
+			delete(&i, &row, &col, MAX_COL);
+			break;
 		case END_LINE:
 			buffer[i] = END_STRING;
 			putchar(c);
