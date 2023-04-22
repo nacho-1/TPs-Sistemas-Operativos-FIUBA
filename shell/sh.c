@@ -20,7 +20,6 @@ run_shell()
 			return;
 		}
 	}
-
 }
 
 // initializes the shell

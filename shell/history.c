@@ -52,7 +52,13 @@ load_history()
     return;
 }
 
+/*
+char * get_previous_command() {
+	char *histfile = getenv("HISTFILE");
+	if (histfile == NULL || history_arr) return ""
 
+}
+*/
 
 void _save_command_in_memory(char * cmd){
 
@@ -76,8 +82,6 @@ void _save_command_in_memory(char * cmd){
 	return;
 
 }
-
-
 
 void _save_command_in_file(char * cmd){
 
@@ -111,7 +115,6 @@ void _save_command_in_file(char * cmd){
 	return;
 }
 
-
 void save_command(char * cmd){
 
 	_save_command_in_memory(cmd);
@@ -120,7 +123,6 @@ void save_command(char * cmd){
 
 	return;
 }
-
 
 void
 free_history()

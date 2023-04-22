@@ -5,7 +5,8 @@
 
 static char buffer[BUFLEN];
 
-void writeChar(char c, size_t *row, size_t *col, int MAX_COL)
+void
+writeChar(char c, size_t *row, size_t *col, int MAX_COL)
 {
 	putchar(c);
 	if (++(*col) >= (size_t) MAX_COL) {
@@ -27,7 +28,8 @@ read_line(const char *prompt)
 	struct winsize w;
 	ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
 	int MAX_COL = w.ws_col - 3;
-	if (!MAX_COL || MAX_COL < 1) MAX_COL = 50;
+	if (!MAX_COL || MAX_COL < 1)
+		MAX_COL = 50;
 
 #ifndef SHELL_NO_INTERACTIVE
 	fprintf(stdout, "%s %s %s\n", COLOR_RED, prompt, COLOR_RESET);
@@ -40,7 +42,7 @@ read_line(const char *prompt)
 		read(STDIN_FILENO, &c, 1);
 		switch (c) {
 		case EOF:
-		case 4:    // EOF | CTRL+D
+		case 4:  // EOF | CTRL+D
 			return NULL;
 		case END_LINE:
 			buffer[i] = END_STRING;

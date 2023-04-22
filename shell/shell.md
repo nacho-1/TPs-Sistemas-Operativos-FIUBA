@@ -69,4 +69,15 @@ en bash, se escribirá el error por stdout y la salida estándar se escribirá e
 
 ### Historial
 
+1. ¿Cuál es la función de los parámetros MIN y TIME del modo no canónico?
+
+La granularidad con la cual se leen los bytes está determinada por los parámetros MIN y TIME.
+El parámetro MIN es el número mínimo de bytes ingresados para que la función read retorne, y el 
+parámetro TIME especifica cuántos segundos se debe esperar para que la función read retorne.
+
+2. ¿Qué se logra en el ejemplo dado al establecer a MIN en 1 y a TIME en 0?
+
+Si se establece MIN en 1 y TIME en 0, significa que la entrada se enviará al programa en tiempo real,
+sin demora, y sin esperar que el usuario presione la tecla Enter para enviar la entrada.
+
 ---
