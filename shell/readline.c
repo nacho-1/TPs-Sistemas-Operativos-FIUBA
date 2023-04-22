@@ -1,5 +1,6 @@
 #include "defs.h"
 #include "readline.h"
+#include "utils.h"
 
 static char buffer[BUFLEN];
 
@@ -17,19 +18,21 @@ read_line(const char *prompt)
 
 	memset(buffer, 0, BUFLEN);
 
-	c = getchar();
-
-	while (c != END_LINE && c != EOF) {
-		buffer[i++] = c;
-		c = getchar();
+	while (true) {
+		read(STDIN_FILENO, &c, 1);
+		switch (c) {
+		case EOF:
+		case 4:    // EOF | CTRL+D
+			return NULL;
+		case END_LINE:
+			buffer[i] = END_STRING;
+			putchar(c);
+			return buffer;
+		default:
+			buffer[i++] = c;
+			putchar(c);
+			printf_debug("\n");
+			break;
+		}
 	}
-
-	// if the user press ctrl+D
-	// just exit normally
-	if (c == EOF)
-		return NULL;
-
-	buffer[i] = END_STRING;
-
-	return buffer;
 }

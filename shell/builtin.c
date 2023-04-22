@@ -133,7 +133,7 @@ history(char *cmd)
 				n = command_lines;
 			}
 			for (int i = (command_lines - n); i < command_lines; i++) {
-				printf("%d: %s", i, history_arr[i]);
+				printf("%d: %s\n", i, history_arr[i]);
 			}
 
 			return true;

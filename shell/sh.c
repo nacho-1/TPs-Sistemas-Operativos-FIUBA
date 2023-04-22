@@ -3,6 +3,7 @@
 #include "readline.h"
 #include "runcmd.h"
 #include "history.h"
+#include "set_input_mode.h"
 
 
 char prompt[PRMTLEN] = { 0 };
@@ -13,11 +14,13 @@ run_shell()
 {
 	char *cmd;
 
-	while ((cmd = read_line(prompt)) != NULL)
+	while ((cmd = read_line(prompt)) != NULL) {
 		if (run_cmd(cmd) == EXIT_SHELL) {
 			free_history();
 			return;
 		}
+	}
+
 }
 
 // initializes the shell
@@ -25,6 +28,7 @@ run_shell()
 static void
 init_shell()
 {
+	set_input_mode();
 	char buf[BUFLEN] = { 0 };
 	char *home = getenv("HOME");
 
