@@ -234,7 +234,6 @@ exec_cmd(struct cmd *cmd)
 			exec_cmd(p->leftcmd);
 
 			free_command(cmd);
-			free_history();
 			fflush(stdout);
 			_exit(EXIT_FAILURE);
 		}
@@ -255,7 +254,6 @@ exec_cmd(struct cmd *cmd)
 			exec_cmd(p->rightcmd);
 
 			free_command(cmd);
-			free_history();
 			fflush(stdout);
 			_exit(EXIT_FAILURE);
 		}
@@ -263,7 +261,6 @@ exec_cmd(struct cmd *cmd)
 		close(read_pipe);
 		close(write_pipe);
 		free_command(cmd);
-		free_history();
 
 		int left_status, right_status;
 		if (left_pid != -1)
