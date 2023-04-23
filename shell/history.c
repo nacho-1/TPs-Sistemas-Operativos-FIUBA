@@ -52,13 +52,15 @@ load_history()
     return;
 }
 
-/*
-char * get_previous_command() {
-	char *histfile = getenv("HISTFILE");
-	if (histfile == NULL || history_arr) return ""
 
+char * get_previous_command() {
+	return "previous command";
 }
-*/
+
+char * get_next_command() {
+	return "next command";
+}
+
 
 void _save_command_in_memory(char * cmd){
 
