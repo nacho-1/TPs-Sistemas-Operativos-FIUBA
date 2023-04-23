@@ -67,10 +67,56 @@ comandos del pipe retornaron EXIT_SUCCESS, de otra forma será EXIT_FAILURE.
 
 ### Variables de entorno temporarias
 
+#### ¿Por qué es necesario hacerlo luego de la llamada a fork(2)?
+
+Es necesario hacerlo luego de la llamada a fork(2) porque al tratarse de variables 
+temporales, solo deben existir en la ejecución del programa y no en la shell. 
+Entonces para que dichas variables vivan en el proceso hijo y no en el padre, se setean luego
+de hacer el fork. 
+
+#### En algunos de los wrappers de la familia de funciones de exec(3), se les puede pasar un tercer argumento, con nuevas variables de entorno para la ejecución de ese proceso. Supongamos, entonces, que en vez de utilizar setenv(3) por cada una de las variables, se guardan en un arreglo y se lo coloca en el tercer argumento de una de las funciones de exec(3).
+
+##### ¿El comportamiento resultante es el mismo que en el primer caso? Explicar qué sucede y por qué.
+
+El comportamiento no es el mismo porque en el primer caso el proceso tiene acceso a las variables que se
+le pasan por parámetro y las variables de entorno de la shell, mientras que en el segundo caso el proceso
+solo tiene acceso a las variables que recibe por parámetro.
+
+#### Describir brevemente una posible implementación para que el comportamiento sea el mismo.
+
+Una posible implementación podría ser usar la variable global `extern char **environ`. 
+Esta variable global es un array que contiene las variables de entorno, por lo que si se le
+agregaran las variables que se desean pasar como parámetro al proceso y se le pasara ese array al mismo
+se obtendría el comportamiento esperado.
+
 ---
 
 ### Pseudo-variables
 
+
+#### Investigar al menos otras tres variables mágicas estándar, y describir su propósito.
+
+1. $0: hace referencia al nombre del script que se está ejecutando actualmente
+``` bash
+$ echo $0
+-bash
+```
+2. $$: hace referencia al ID del proceso actual en el que se está ejecutando el script
+``` bash
+$ echo $$
+22911
+$ ps
+  PID  TTY          TIME CMD                                                
+ 22911 pts/0     00:00:00 bash                                             
+ 56150  pts/0     00:00:00 ps 
+```
+3. $_: contiene el último argumento del comando anterior ejecutado
+``` bash
+$ echo sisop
+sisop
+$ echo $_
+sisop
+```
 ---
 
 ### Comandos built-in
@@ -82,13 +128,13 @@ directa/simple de cambiarlo desde otro programa.
 
 ### Historial
 
-1. ¿Cuál es la función de los parámetros MIN y TIME del modo no canónico?
+#### ¿Cuál es la función de los parámetros MIN y TIME del modo no canónico?
 
 La granularidad con la cual se leen los bytes está determinada por los parámetros MIN y TIME.
 El parámetro MIN es el número mínimo de bytes ingresados para que la función read retorne, y el 
 parámetro TIME especifica cuántos segundos se debe esperar para que la función read retorne.
 
-2. ¿Qué se logra en el ejemplo dado al establecer a MIN en 1 y a TIME en 0?
+#### ¿Qué se logra en el ejemplo dado al establecer a MIN en 1 y a TIME en 0?
 
 Si se establece MIN en 1 y TIME en 0, significa que la entrada se enviará al programa en tiempo real,
 sin demora, y sin esperar que el usuario presione la tecla Enter para enviar la entrada.
