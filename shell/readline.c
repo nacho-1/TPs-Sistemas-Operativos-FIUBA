@@ -57,10 +57,10 @@ void navigateHistory(int *i, size_t *row, size_t *col, int MAX_COL) {
 		read(STDIN_FILENO, &c, 1);
 		switch (c) {
 		case 'A':  // up
-			strcpy(buffer, get_previous_command());
+			get_previous_command(buffer);			
 			break;
 		case 'B':  // down
-			strcpy(buffer, get_next_command());
+			get_next_command(buffer);
 			break;
 		default:
 			return;

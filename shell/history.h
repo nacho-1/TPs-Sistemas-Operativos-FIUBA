@@ -7,8 +7,8 @@
 void load_history();
 void free_history();
 void save_command(char * cmd);
-char * get_previous_command();
-char * get_next_command();
+void get_previous_command(char * buf);
+void get_next_command(char * buf);
 
 void _save_command_in_memory(char * cmd);
 void _save_command_in_file(char * cmd);
