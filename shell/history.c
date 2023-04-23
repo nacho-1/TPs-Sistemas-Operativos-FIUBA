@@ -71,7 +71,7 @@ void get_previous_command(char * buf) {
 	
 	strcpy(command, history_arr[history_print_pos]);
 	line_size = strlen(command);
-	command[line_size] = '\0';	
+	command[line_size - 1] = SPACE;	
 	strcpy(buf, command);
 
 	return;	
@@ -94,7 +94,7 @@ void get_next_command(char * buf) {
 	
 	strcpy(command, history_arr[history_print_pos]);
 	line_size = strlen(command);
-	command[line_size] = '\0';	
+	command[line_size - 1] = SPACE;	
 	strcpy(buf, command);
 
 	return;	
