@@ -63,6 +63,7 @@ run_cmd(char *cmd)
 	if ((p = fork()) == 0) {
 		exec_cmd(parsed);
 		free_command(parsed);
+		free_history();
 		fflush(stdout);
 		_exit(EXIT_FAILURE);
 	}
