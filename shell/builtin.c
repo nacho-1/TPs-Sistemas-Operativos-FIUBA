@@ -98,46 +98,50 @@ history(char *cmd)
 {
 	size_t idx;
 	char *command = get_token(cmd, 0);
+	if (strcmp(command, "history") != 0) {
+		free(command);
+		return false;
+	}
 
-	if (strcmp(command, "history") == 0) {
-		idx = strlen(command);
-		if (cmd[idx] == END_STRING) {
-			// print all history commands
-			int i = 0;
-			while (history_arr[i] != NULL) {
-				printf("%d: %s", i, history_arr[i]);
-				i++;
-			}
-			return true;
+
+	idx = strlen(command);
+	if (cmd[idx] == END_STRING) {
+		// print all history commands
+		int i = 0;
+		while (history_arr[i] != NULL) {
+			printf("%d: %s", i, history_arr[i]);
+			i++;
 		}
+		free(command);
+		return true;
+	}
 
-		idx++;
+	idx++;
 
-		char *arg = get_token(cmd, idx);
+	char *arg = get_token(cmd, idx);
 
-		for (size_t i = 0; i < strlen(arg); i++) {
-			if (!isdigit(arg[i])) {
-				return false;
-			}
-		}
-		idx = idx + strlen(arg);
-		if (cmd[idx] == END_STRING) {
-			// print latest n commands
-			int n = atoi(arg);
-			int command_lines = 0;
-			while (history_arr[command_lines++]) {
-			}
-			command_lines -= 1;
-
-			if (n > command_lines) {
-				n = command_lines;
-			}
-			for (int i = (command_lines - n); i < command_lines; i++) {
-				printf("%d: %s", i, history_arr[i]);
-			}
-
-			return true;
+	for (size_t i = 0; i < strlen(arg); i++) {
+		if (!isdigit(arg[i])) {
+			free(command);
+			return false;
 		}
 	}
-	return false;
+	idx = idx + strlen(arg);
+	if (cmd[idx] == END_STRING) {
+		// print latest n commands
+		int n = atoi(arg);
+		int command_lines = 0;
+		while (history_arr[command_lines++]) {
+		}
+		command_lines -= 1;
+
+		if (n > command_lines) {
+			n = command_lines;
+		}
+		for (int i = (command_lines - n); i < command_lines; i++) {
+			printf("%d: %s", i, history_arr[i]);
+		}
+		free(command);
+		return true;
+	}
 }
