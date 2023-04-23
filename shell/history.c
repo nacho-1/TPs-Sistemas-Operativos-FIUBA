@@ -77,6 +77,7 @@ void _save_command_in_memory(char * cmd){
 	history_arr[pos] = (char *) malloc((strlen(cmd) + 2) * sizeof(char));
 
 	strcpy(history_arr[pos], cmd);
+	strcat(history_arr[pos], "\n\0");
 
 	pos++;	
 	history_arr[pos] = NULL;

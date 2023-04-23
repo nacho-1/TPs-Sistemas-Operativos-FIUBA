@@ -23,10 +23,6 @@ wait_back_processes()
 int
 run_cmd(char *cmd)
 {
-	// TODO - se tiene que guardar el comando en memoria
-	//        y la escritura en archivo se puede hacer al final de la sesion
-	// TODO - si es spcae / end_of_line no guardar en historial
-
 
 	wait_back_processes();
 
