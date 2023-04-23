@@ -108,13 +108,11 @@ void _save_command_in_file(char * cmd){
 
 	fwrite(cmd, sizeof(char), strlen(cmd), fp);
 	fwrite("\n", sizeof(char), 1, fp);
-	fclose(fp);
 	if (ferror(fp) != 0) {
 		eprint_debug(errno,"Failure writing the history file. The "
-						"command won't be saved.\n");
+		                    "command won't be saved.\n");
 	}
-	
-	return;
+	fclose(fp);
 }
 
 void save_command(char * cmd){
