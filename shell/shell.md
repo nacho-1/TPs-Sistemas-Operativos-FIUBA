@@ -2,7 +2,7 @@
 
 ### Búsqueda en $PATH
 
-1. ¿Cuáles son las diferencias entre la syscall execve(2) y la familia de wrappers proporcionados por la librería estándar de C (libc) exec(3)?
+#### Cuáles son las diferencias entre la syscall execve(2) y la familia de wrappers proporcionados por la librería estándar de C (libc) exec(3)?
 
 La syscall execve(2) reemplaza al programa que está siendo ejecutado en el momento
 por el proceso pasado por parámetro. Recibe tres argumentos: el nombre del archivo 
@@ -15,25 +15,31 @@ familia llaman a la misma syscall, la principal diferencia entre estas funciones
 la forma en que se especifican los argumentos y la forma en que se busca el archivo ejecutable. 
 
 
-2. ¿Puede la llamada a exec(3) fallar? ¿Cómo se comporta la implementación de la shell en ese caso?
+#### ¿Puede la llamada a exec(3) fallar? ¿Cómo se comporta la implementación de la shell en ese caso?
 
-La llamada a exec(3) podría fallar en caso de que el programa a ejecutar no existiera. 
+La llamada a exec(3) podría fallar, por ejemplo, en caso de que el programa a ejecutar no existiera. 
 
-TODO: como lo solucionamos
+En esta implementación, en caso de fallar, se libera memoria dinámica herdada del padre,
+que de otra forma se liberaría con el exec(3); se hace un fflush() de standard output y 
+se hace un _exit(). Notar que este libera todos los file descriptors.
 
 
 ---
 
 ### Procesos en segundo plano
 
-1. Detallar cuál es el mecanismo utilizado para implementar procesos en segundo plano.
+#### Detallar cuál es el mecanismo utilizado para implementar procesos en segundo plano.
 
+Cuando la shell detecta que el comando a ejecutar se debe hacer en segundo plano, no se
+le hace un wait() en ese momento, sino que se tiene un contador de procesos en background,
+y cada vez que se ingresa un comando, se hace un wait() con el flag WNOHANG por cada uno
+de estos. De esta forma la shell no se cuelga y se evita generar muchos procesos zombie.
 
 ---
 
 ### Flujo estándar
 
-1. Investigar el significado de 2>&1, explicar cómo funciona su forma general
+#### Investigar el significado de 2>&1, explicar cómo funciona su forma general
 
 La expresión 2>&1 se utiliza para redirigir stderr de un comando a la misma 
 salida que stdout.
@@ -51,9 +57,13 @@ en bash, se escribirá el error por stdout y la salida estándar se escribirá e
 
 ### Tuberías múltiples
 
-1. Investigar qué ocurre con el exit code reportado por la shell si se ejecuta un pipe
+#### Investigar qué ocurre con el exit code reportado por la shell si se ejecuta un pipe
 
----
+En bash, se tiene la variable de entorno _$PIPESTATUS_, un array que guarda todos
+los códigos de salida del último comando (que podría ser uno solo).
+
+En nuestra shell, el código de retorno del pipe será EXIT_SUCCESS si todos los
+comandos del pipe retornaron EXIT_SUCCESS, de otra forma será EXIT_FAILURE.
 
 ### Variables de entorno temporarias
 
@@ -65,7 +75,10 @@ en bash, se escribirá el error por stdout y la salida estándar se escribirá e
 
 ### Comandos built-in
 
----
+#### ¿Entre cd y pwd, alguno de los dos se podría implementar sin necesidad de ser built-in? ¿Por qué? ¿Si la respuesta es sí, cuál es el motivo, entonces, de hacerlo como built-in?
+- `cd` : No. La shell corre en su propio directorio por lo que no hay ninguna manera
+directa/simple de cambiarlo desde otro programa.
+- `pwd` : Si. Ya que cualquier proceso ejecutado por la shell hereda el _working directory_.
 
 ### Historial
 
