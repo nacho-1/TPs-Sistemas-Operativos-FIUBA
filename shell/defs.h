@@ -31,6 +31,12 @@
 #define END_LINE '\n'
 #define SPACE ' '
 
+#define CHAR_NL '\n'
+#define CHAR_EOXMIT '\004'
+#define CHAR_BACK '\b'
+#define CHAR_DEL 127
+#define CHAR_ESC '\033'
+
 #define BUFLEN 1024
 #define PRMTLEN 1024
 #define MAXARGS 20

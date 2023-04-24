@@ -23,7 +23,6 @@ wait_back_processes()
 int
 run_cmd(char *cmd)
 {
-
 	wait_back_processes();
 
 	pid_t p;

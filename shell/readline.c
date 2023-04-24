@@ -6,8 +6,10 @@
 
 static char buffer[BUFLEN];
 
-void delete(int *i, size_t *row, size_t *col, int MAX_COL) {
-	if (*i <= 0) return;
+void delete (int *i, size_t *row, size_t *col, int MAX_COL)
+{
+	if (*i <= 0)
+		return;
 
 	buffer[--(*i)] = 0;
 
@@ -49,15 +51,17 @@ clearLine(size_t *row, size_t *col)
 	printf_debug("\33[2K\r$ ");
 }
 
-void navigateHistory(int *i, size_t *row, size_t *col, int MAX_COL) {
+void
+navigateHistory(int *i, size_t *row, size_t *col, int MAX_COL)
+{
 	int c = 0;
-	read(STDIN_FILENO, &c, 1);
+	c = getchar();
 	switch (c) {
 	case '[':  // character before arrows
-		read(STDIN_FILENO, &c, 1);
+		c = getchar();
 		switch (c) {
 		case 'A':  // up
-			get_previous_command(buffer);			
+			get_previous_command(buffer);
 			break;
 		case 'B':  // down
 			get_next_command(buffer);
@@ -94,26 +98,37 @@ read_line(const char *prompt)
 
 	memset(buffer, 0, BUFLEN);
 
-	while (true) {
-		read(STDIN_FILENO, &c, 1);
+	c = getchar();
+	while (c != END_LINE && c != EOF) {
 		switch (c) {
-		case EOF:
-		case 4:  // EOF | CTRL+D
+		case CHAR_EOXMIT:  // CTRL+D
 			return NULL;
-		case 27:
+		case CHAR_ESC:  // escape character before arrows
 			navigateHistory(&i, &row, &col, MAX_COL);
-		case 127:
-			delete(&i, &row, &col, MAX_COL);
 			break;
-		case END_LINE:
-			buffer[i] = END_STRING;
-			putchar(c);
-			return buffer;
+		case CHAR_DEL:  // DEL
+			delete (&i, &row, &col, MAX_COL);
+			break;
 		default:
 			buffer[i++] = c;
+#ifndef SHELL_NO_INTERACTIVE
 			writeChar(c, &row, &col, MAX_COL);
+#endif
 			break;
 		}
+		c = getchar();
 		fflush(stdout);
 	}
+
+	// if the user press ctrl+D
+	// just exit normally
+	if (c == EOF)
+		return NULL;
+
+#ifndef SHELL_NO_INTERACTIVE
+	writeChar(c, &row, &col, MAX_COL);
+#endif
+	buffer[i] = END_STRING;
+
+	return buffer;
 }
