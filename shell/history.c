@@ -34,7 +34,7 @@ load_history()
 
 	// read file line by line with fgets()
 	while (fgets(line, sizeof(line) * sizeof(char), fp) != NULL) {
-		if (last_line_pos >= alloc_size) {
+		if (last_line_pos >= alloc_size - 1) {
 			history_arr = (char **) realloc(
 			        history_arr,
 			        alloc_size * HISTORY_GROWING_FACTOR *
