@@ -5,7 +5,7 @@ struct cmd *parsed_pipe;
 int back_process_count = 0;
 
 void
-wait_back_processes()
+wait_back_processes(void)
 {
 	// Try to wait background processes
 	int updated_count = 0;

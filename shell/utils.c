@@ -81,7 +81,10 @@ eprint_debug(int error_code, char *fmt, ...)
 	va_start(args, fmt);
 	int ret = vsnprintf(msg_error, sizeof(msg_error), fmt, args);
 	va_end(args);
-	strerror_r(error_code, msg_error + ret, sizeof(msg_error) - ret);
-	fprintf(stderr, "%s", msg_error);
+	char *ret_str =
+	        strerror_r(error_code, msg_error + ret, sizeof(msg_error) - ret);
+	if (ret_str != NULL) {
+		fprintf(stderr, "%s", msg_error);
+	}
 #endif
 }

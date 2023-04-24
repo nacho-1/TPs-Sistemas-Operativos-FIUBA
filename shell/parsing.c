@@ -98,16 +98,15 @@ parse_environ_var(struct execcmd *c, char *arg)
 // - remember to check the size of variable's value
 //		It could be greater than the current size of 'arg'
 //		If that's the case, you should realloc 'arg' to the new size.
-static char *
+void
 expand_environ_var(char *arg)
 {
 	char *buf;
 	int indx = block_contains(arg, '$');
 	if (indx == 0) {
 		if (strcmp(arg, "$?") == 0) {
-			char *status_str;
-			sprintf(status_str, "%d", status);
-			return status_str;
+			sprintf(arg, "%d", status);
+			return;
 		}
 		buf = getenv(arg + 1);
 		if (buf) {
@@ -121,17 +120,19 @@ expand_environ_var(char *arg)
 					printf_debug("Variable"
 					             " expansion error: "
 					             "Realloc failed\n");
-					return "";
+					strcpy(arg, "");
+					return;
 				}
 			}
 			strncpy(arg, buf, buf_size);
 			// Para asegurarme.
 			arg[buf_size] = '\0';
 		} else {
-			return "";
+			strcpy(arg, "");
+			return;
 		}
 	}
-	return arg;
+	return;
 }
 
 // parses one single command having into account:
@@ -160,7 +161,7 @@ parse_exec(char *buf_cmd)
 		if (parse_environ_var(c, tok))
 			continue;
 
-		tok = expand_environ_var(tok);
+		expand_environ_var(tok);
 		if (strcmp(tok, "") != 0) {
 			c->argv[argc++] = tok;
 		}

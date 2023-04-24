@@ -1,8 +1,8 @@
 #include "defs.h"
 #include "types.h"
+#include "history.h"
 #include "readline.h"
 #include "runcmd.h"
-#include "history.h"
 #include "set_input_mode.h"
 
 

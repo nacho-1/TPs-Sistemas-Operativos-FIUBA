@@ -1,7 +1,4 @@
-#include "defs.h"
 #include "readline.h"
-#include "utils.h"
-#include <sys/ioctl.h>
 #include "history.h"
 
 static char buffer[BUFLEN];

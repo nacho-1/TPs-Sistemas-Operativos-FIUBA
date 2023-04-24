@@ -144,4 +144,6 @@ history(char *cmd)
 		free(command);
 		return true;
 	}
+
+	return false;
 }

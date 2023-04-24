@@ -14,11 +14,8 @@ static void
 get_environ_key(char *arg, char *key)
 {
 	int i;
-	printf("antes de for de get key, arg: %s\n", arg);
 	for (i = 0; arg[i] != '='; i++) {
-		printf("antes de asignacion\n");
 		key[i] = arg[i];
-		printf("en el loop: %s\n", key);
 	}
 
 
@@ -127,8 +124,8 @@ exec_cmd(struct cmd *cmd)
 		r = (struct execcmd *) cmd;
 
 		int fd_out;
-		int fd_err;
 		int fd_in;
+		int fd_err = 0;
 		if (strlen(r->out_file) > 0) {
 			fd_out = open_redir_fd(r->out_file,
 			                       O_CLOEXEC | O_CREAT | O_WRONLY |
@@ -167,7 +164,10 @@ exec_cmd(struct cmd *cmd)
 
 		if (strlen(r->err_file) > 0) {
 			if (strcmp(r->err_file, "&1") == 0) {
-				dup2(STDOUT_FILENO, fd_err);
+				int ret = dup2(STDOUT_FILENO, fd_err);
+				if (ret == -1) {
+					perror("STDOUT duplication failed");
+				}
 			} else {
 				fd_err = open_redir_fd(r->err_file,
 				                       O_CLOEXEC | O_CREAT |

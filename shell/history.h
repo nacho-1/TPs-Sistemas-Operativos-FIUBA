@@ -4,8 +4,8 @@
 #include "defs.h"
 #include "utils.h"
 
-void load_history();
-void free_history();
+void load_history(void);
+void free_history(void);
 void save_command(char *cmd);
 void get_previous_command(char *buf);
 void get_next_command(char *buf);

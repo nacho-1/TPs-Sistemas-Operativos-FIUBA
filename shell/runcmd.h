@@ -10,5 +10,6 @@
 #include "history.h"
 
 int run_cmd(char *cmd);
+void wait_back_processes(void);
 
 #endif  // RUNCMD_H

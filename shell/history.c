@@ -8,7 +8,7 @@ int history_print_pos = 0;
 
 // load command history in a string array
 void
-load_history()
+load_history(void)
 {
 	FILE *fp;
 
@@ -175,7 +175,7 @@ save_command(char *cmd)
 }
 
 void
-free_history()
+free_history(void)
 {
 	int i = 0;
 	while (history_arr[i] != NULL) {
