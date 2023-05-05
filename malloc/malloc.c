@@ -178,6 +178,7 @@ void split_region(struct region *region, size_t size)
 	new_region->free = true;
 	new_region->size = region->size - size - sizeof(struct region);
 	new_region->next = region->next;
+	new_region->next->prev = new_region;
 	new_region->prev = region;
 
 	region->next = new_region;
