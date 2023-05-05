@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <sys/mman.h>
 
 #include "malloc.h"
 #include "printfmt.h"
@@ -12,17 +13,33 @@
 #define REGION2PTR(r) ((r) + 1)
 #define PTR2REGION(ptr) ((struct region *) (ptr) -1)
 
+#define MIN_SIZE 64
+
+#define SMALL_BLOCK_SIZE 16384
+
 struct region {
 	bool free;
 	size_t size;
 	struct region *next;
+	struct region *prev;
 };
 
-struct region *region_free_list = NULL;
+// List of free regions kept in order of memory address.
+struct region *free_regions_head = NULL;
 
 int amount_of_mallocs = 0;
 int amount_of_frees = 0;
 int requested_memory = 0;
+
+void split_region(struct region *region, size_t size);
+
+/*
+ * Insert region in the list of free regions.
+ * Coalesce if possible.
+ */
+void free_region(struct region *region);
+
+void coalesce_region(struct region *region);
 
 // finds the next free region
 // that holds the requested size
@@ -30,14 +47,14 @@ int requested_memory = 0;
 static struct region *
 find_free_region(size_t size)
 {
-	struct region *next = region_free_list;
+	struct region *next = free_regions_head;
 
 #ifdef FIRST_FIT
 	while (next != NULL) {
-		if (next.size >= size)
+		if (next->size >= size)
 			break;
 		else
-			next = next.next;
+			next = next->next;
 	}
 #endif
 
@@ -51,36 +68,20 @@ find_free_region(size_t size)
 static struct region *
 grow_heap(size_t size)
 {
-	// finds the current heap break
-	struct region *curr = (struct region *) sbrk(0);
+	struct region *addr;
 
-	// allocates the requested size
-	struct region *prev =
-	        (struct region *) sbrk(sizeof(struct region) + size);
-
-	// verifies that the returned address
-	// is the same that the previous break
-	// (ref: sbrk(2))
-	assert(curr == prev);
-
-	// verifies that the allocation
-	// is successful
-	//
-	// (ref: sbrk(2))
-	if (curr == (struct region *) -1) {
+	addr = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
+	if (addr == MAP_FAILED)
 		return NULL;
-	}
 
-	// first time here
-	if (!region_free_list) {
-		region_free_list = curr;
-	}
+	addr->free = true;
+	addr->size = size - sizeof(struct region);
+	addr->next = NULL;
+	addr->prev = NULL;
 
-	curr->size = size;
-	curr->next = NULL;
-	curr->free = false;
+	free_region(addr);
 
-	return curr;
+	return addr;
 }
 
 /// Public API of malloc library ///
@@ -88,42 +89,56 @@ grow_heap(size_t size)
 void *
 malloc(size_t size)
 {
-	struct region *next;
-
 	// aligns to multiple of 4 bytes
 	size = ALIGN4(size);
+
+	// minimun size of region is MIN_SIZE
+	size = size > MIN_SIZE ? size : MIN_SIZE;
+
+	// for now this is max size
+	if (size >= SMALL_BLOCK_SIZE - sizeof(struct region))
+		return NULL;
+
+	struct region *region = find_free_region(size);
+
+	if (region == NULL) {
+		// for now we only work with 1 block
+		if (amount_of_mallocs > 0)
+			return NULL;
+
+		region = grow_heap(SMALL_BLOCK_SIZE);
+	}
+
+	split_region(region, size);
+
+	// remove the region from the list of free regions
+	if (region->prev != NULL)
+		region->prev->next = region->next;
+	if (region->next != NULL)
+		region->next->prev = region->prev;
+
+	region->free = false;
 
 	// updates statistics
 	amount_of_mallocs++;
 	requested_memory += size;
 
-	next = find_free_region(size);
-
-	if (!next) {
-		next = grow_heap(size);
-	}
-
-	// Your code here
-	//
-	// hint: maybe split free regions?
-
-	return REGION2PTR(next);
+	return REGION2PTR(region);
 }
 
 void
 free(void *ptr)
 {
-	// updates statistics
-	amount_of_frees++;
+	if (ptr == NULL)
+		return;
 
 	struct region *curr = PTR2REGION(ptr);
-	assert(curr->free == 0);
+	assert(!curr->free);
 
-	curr->free = true;
+	free_region(curr);
 
-	// Your code here
-	//
-	// hint: maybe coalesce regions?
+	// updates statistics
+	amount_of_frees++;
 }
 
 void *
@@ -148,4 +163,72 @@ get_stats(struct malloc_stats *stats)
 	stats->mallocs = amount_of_mallocs;
 	stats->frees = amount_of_frees;
 	stats->requested_memory = requested_memory;
+}
+
+void split_region(struct region *region, size_t size)
+{
+	if (region->size < size + sizeof(struct region) + MIN_SIZE)
+		return;
+
+	char *addr = ((char *) (region + 1)) + size;
+
+	struct region *new_region = (struct region *) addr;
+	new_region->free = true;
+	new_region->size = region->size - size - sizeof(struct region);
+	new_region->next = region->next;
+	new_region->prev = region;
+
+	region->next = new_region;
+}
+
+void free_region(struct region *region)
+{
+	region->free = true;
+
+	if (free_regions_head == NULL) {
+		free_regions_head = region;
+		return;
+	}
+
+	struct region *curr = free_regions_head;
+
+	while (curr < region) {
+		if (curr->next == NULL)
+			break;
+
+		curr = curr->next;
+	}
+
+	if (curr < region) { // region has the highest mem addr of the list
+		region->prev = curr;
+		region->next = NULL;
+	} else {
+		region->prev = curr->prev;
+		region->next = curr;
+	}
+
+	coalesce_region(region);
+}
+
+void coalesce_region(struct region *region)
+{
+	if (region->prev != NULL) {
+		char *addr = ((char *) (region->prev + 1)) + region->prev->size;
+		if (addr == (char *) region) { // they are contiguous
+			region->prev->next = region->next;
+			region->prev->size += sizeof(struct region) + region->size;
+			region = region->prev;
+			if (region->next != NULL)
+				region->next->prev = region;
+		}
+	}
+	if (region->next != NULL) {
+		char *addr = ((char *) (region + 1)) + region->size;
+		if (addr == (char *) region->next) { // they are contiguous
+			region->next = region->next->next;
+			region->size += sizeof(struct region) + region->next->size;
+			if (region->next != NULL)
+				region->next->prev = region;
+		}
+	}
 }
