@@ -107,6 +107,8 @@ malloc(size_t size)
 			return NULL;
 
 		region = grow_heap(SMALL_BLOCK_SIZE);
+		if (region == NULL)
+			return NULL;
 	}
 
 	split_region(region, size);
