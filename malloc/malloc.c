@@ -195,7 +195,7 @@ void free_region(struct region *region)
 
 	struct region *curr = free_regions_head;
 
-	while (curr < region) {
+	while (curr < region) { // find position in list to insert the region
 		if (curr->next == NULL)
 			break;
 
