@@ -36,10 +36,12 @@ void split_region(struct region *region, size_t size);
 /*
  * Insert region in the list of free regions.
  * Coalesce if possible.
+ * Return the pointer to the new free region.
+ * If coalition took place return value might be different from region.
  */
-void free_region(struct region *region);
+struct region *free_region(struct region *region);
 
-void coalesce_region(struct region *region);
+struct region *coalesce_region(struct region *region);
 
 // finds the next free region
 // that holds the requested size
@@ -79,7 +81,7 @@ grow_heap(size_t size)
 	addr->next = NULL;
 	addr->prev = NULL;
 
-	free_region(addr);
+	addr = free_region(addr);
 
 	return addr;
 }
@@ -184,13 +186,13 @@ void split_region(struct region *region, size_t size)
 	region->next = new_region;
 }
 
-void free_region(struct region *region)
+struct region *free_region(struct region *region)
 {
 	region->free = true;
 
 	if (free_regions_head == NULL) {
 		free_regions_head = region;
-		return;
+		return region;
 	}
 
 	struct region *curr = free_regions_head;
@@ -210,10 +212,10 @@ void free_region(struct region *region)
 		region->next = curr;
 	}
 
-	coalesce_region(region);
+	return coalesce_region(region);
 }
 
-void coalesce_region(struct region *region)
+struct region *coalesce_region(struct region *region)
 {
 	if (region->prev != NULL) {
 		char *addr = ((char *) (region->prev + 1)) + region->prev->size;
@@ -234,4 +236,5 @@ void coalesce_region(struct region *region)
 				region->next->prev = region;
 		}
 	}
+	return region;
 }
