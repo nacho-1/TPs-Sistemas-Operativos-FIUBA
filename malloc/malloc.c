@@ -33,7 +33,12 @@ find_free_region(size_t size)
 	struct region *next = region_free_list;
 
 #ifdef FIRST_FIT
-	// Your code here for "first fit"
+	while (next != NULL) {
+		if (next.size >= size)
+			break;
+		else
+			next = next.next;
+	}
 #endif
 
 #ifdef BEST_FIT
