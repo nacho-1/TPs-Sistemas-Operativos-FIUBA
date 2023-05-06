@@ -13,8 +13,8 @@
 #define REGION2PTR(r) ((r) + 1)
 #define PTR2REGION(ptr) ((struct region *) (ptr) -1)
 
-#define MAX_BLOCKS 1 // maximun ammount of blocks this library will support
-#define MIN_SIZE 64 // minimun size of a region
+#define MAX_BLOCKS 1  // maximun ammount of blocks this library will support
+#define MIN_SIZE 64   // minimun size of a region
 
 #define SMALL_BLOCK_SIZE 16384
 
@@ -74,7 +74,8 @@ grow_heap(size_t size)
 
 	struct region *mapping;
 
-	mapping = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
+	mapping = mmap(
+	        NULL, size, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
 	if (mapping == MAP_FAILED)
 		return NULL;
 
@@ -167,7 +168,8 @@ get_stats(struct malloc_stats *stats)
 	stats->requested_memory = requested_memory;
 }
 
-void split(struct region *region, size_t size)
+void
+split(struct region *region, size_t size)
 {
 	assert(region->size > size + sizeof(struct region));
 
@@ -183,7 +185,8 @@ void split(struct region *region, size_t size)
 	region->next = new_region;
 }
 
-struct region *merge(struct region *region)
+struct region *
+merge(struct region *region)
 {
 	if (region == NULL)
 		return NULL;
@@ -199,7 +202,8 @@ struct region *merge(struct region *region)
 	return region;
 }
 
-struct region *coalesce(struct region *region)
+struct region *
+coalesce(struct region *region)
 {
 	if (region->prev != NULL && region->prev->free)
 		region = merge(region->prev);
