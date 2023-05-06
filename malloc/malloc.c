@@ -13,7 +13,8 @@
 #define REGION2PTR(r) ((r) + 1)
 #define PTR2REGION(ptr) ((struct region *) (ptr) -1)
 
-#define MIN_SIZE 64
+#define MAX_BLOCKS 1 // maximun ammount of blocks this library will support
+#define MIN_SIZE 64 // minimun size of a region
 
 #define SMALL_BLOCK_SIZE 16384
 
@@ -24,36 +25,34 @@ struct region {
 	struct region *prev;
 };
 
-// List of free regions kept in order of memory address.
-struct region *free_regions_head = NULL;
+size_t blocks_size = 0;
+struct region *blocks[MAX_BLOCKS];
 
 int amount_of_mallocs = 0;
 int amount_of_frees = 0;
 int requested_memory = 0;
 
-void split_region(struct region *region, size_t size);
+void split(struct region *region, size_t size);
 
 /*
- * Insert region in the list of free regions.
- * Coalesce if possible.
- * Return the pointer to the new free region.
- * If coalition took place return value might be different from region.
+ * Merge region with its next region into one.
  */
-struct region *free_region(struct region *region);
+struct region *merge(struct region *region);
 
-struct region *coalesce_region(struct region *region);
+/*
+ * Coalesce region with its adjacent ones.
+ */
+struct region *coalesce(struct region *region);
 
-// finds the next free region
-// that holds the requested size
-//
+
 static struct region *
 find_free_region(size_t size)
 {
-	struct region *next = free_regions_head;
+	struct region *next = blocks[0];
 
 #ifdef FIRST_FIT
 	while (next != NULL) {
-		if (next->size >= size)
+		if (next->free && next->size >= size)
 			break;
 		else
 			next = next->next;
@@ -70,20 +69,24 @@ find_free_region(size_t size)
 static struct region *
 grow_heap(size_t size)
 {
-	struct region *addr;
-
-	addr = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
-	if (addr == MAP_FAILED)
+	if (blocks_size == MAX_BLOCKS)
 		return NULL;
 
-	addr->free = true;
-	addr->size = size - sizeof(struct region);
-	addr->next = NULL;
-	addr->prev = NULL;
+	struct region *mapping;
 
-	addr = free_region(addr);
+	mapping = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
+	if (mapping == MAP_FAILED)
+		return NULL;
 
-	return addr;
+	mapping->free = true;
+	mapping->size = size - sizeof(struct region);
+	mapping->next = NULL;
+	mapping->prev = NULL;
+
+	blocks_size++;
+	blocks[blocks_size] = mapping;
+
+	return mapping;
 }
 
 /// Public API of malloc library ///
@@ -97,15 +100,14 @@ malloc(size_t size)
 	// minimun size of region is MIN_SIZE
 	size = size > MIN_SIZE ? size : MIN_SIZE;
 
-	// for now this is max size
+	// TODO: blocks of different sizes
 	if (size >= SMALL_BLOCK_SIZE - sizeof(struct region))
 		return NULL;
 
 	struct region *region = find_free_region(size);
 
 	if (region == NULL) {
-		// for now we only work with 1 block
-		if (amount_of_mallocs > 0)
+		if (amount_of_mallocs >= MAX_BLOCKS)
 			return NULL;
 
 		region = grow_heap(SMALL_BLOCK_SIZE);
@@ -113,13 +115,8 @@ malloc(size_t size)
 			return NULL;
 	}
 
-	split_region(region, size);
-
-	// remove the region from the list of free regions
-	if (region->prev != NULL)
-		region->prev->next = region->next;
-	if (region->next != NULL)
-		region->next->prev = region->prev;
+	if (region->size >= size + sizeof(struct region) + MIN_SIZE)
+		split(region, size);
 
 	region->free = false;
 
@@ -139,7 +136,8 @@ free(void *ptr)
 	struct region *curr = PTR2REGION(ptr);
 	assert(!curr->free);
 
-	free_region(curr);
+	curr->free = true;
+	coalesce(curr);
 
 	// updates statistics
 	amount_of_frees++;
@@ -169,10 +167,9 @@ get_stats(struct malloc_stats *stats)
 	stats->requested_memory = requested_memory;
 }
 
-void split_region(struct region *region, size_t size)
+void split(struct region *region, size_t size)
 {
-	if (region->size < size + sizeof(struct region) + MIN_SIZE)
-		return;
+	assert(region->size > size + sizeof(struct region));
 
 	char *addr = ((char *) (region + 1)) + size;
 
@@ -186,55 +183,29 @@ void split_region(struct region *region, size_t size)
 	region->next = new_region;
 }
 
-struct region *free_region(struct region *region)
+struct region *merge(struct region *region)
 {
-	region->free = true;
+	if (region == NULL)
+		return NULL;
 
-	if (free_regions_head == NULL) {
-		free_regions_head = region;
+	if (region->next == NULL)
 		return region;
-	}
 
-	struct region *curr = free_regions_head;
+	region->size += sizeof(struct region) + region->next->size;
+	region->next = region->next->next;
+	if (region->next != NULL)
+		region->next->prev = region;
 
-	while (curr < region) { // find position in list to insert the region
-		if (curr->next == NULL)
-			break;
-
-		curr = curr->next;
-	}
-
-	if (curr < region) { // region has the highest mem addr of the list
-		region->prev = curr;
-		region->next = NULL;
-	} else {
-		region->prev = curr->prev;
-		region->next = curr;
-	}
-
-	return coalesce_region(region);
+	return region;
 }
 
-struct region *coalesce_region(struct region *region)
+struct region *coalesce(struct region *region)
 {
-	if (region->prev != NULL) {
-		char *addr = ((char *) (region->prev + 1)) + region->prev->size;
-		if (addr == (char *) region) { // they are contiguous
-			region->prev->next = region->next;
-			region->prev->size += sizeof(struct region) + region->size;
-			region = region->prev;
-			if (region->next != NULL)
-				region->next->prev = region;
-		}
-	}
-	if (region->next != NULL) {
-		char *addr = ((char *) (region + 1)) + region->size;
-		if (addr == (char *) region->next) { // they are contiguous
-			region->next = region->next->next;
-			region->size += sizeof(struct region) + region->next->size;
-			if (region->next != NULL)
-				region->next->prev = region;
-		}
-	}
+	if (region->prev != NULL && region->prev->free)
+		region = merge(region->prev);
+
+	if (region->next != NULL && region->next->free)
+		region = merge(region);
+
 	return region;
 }
