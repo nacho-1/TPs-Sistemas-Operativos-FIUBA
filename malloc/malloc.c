@@ -15,7 +15,6 @@
 
 #define MAX_BLOCKS 1  // maximun ammount of blocks this library will support
 #define MIN_SIZE 64   // minimun size of a region
-
 #define SMALL_BLOCK_SIZE 16384
 
 struct region {
@@ -95,6 +94,9 @@ grow_heap(size_t size)
 void *
 malloc(size_t size)
 {
+	if ((int) size <= 0)
+		return NULL;
+
 	// aligns to multiple of 4 bytes
 	size = ALIGN4(size);
 
