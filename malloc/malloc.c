@@ -81,7 +81,7 @@ grow_heap(size_t size)
 
 	blocks[blocks_mapped] = mapping;
 	blocks_mapped++;
-	
+
 	return mapping;
 }
 
@@ -107,21 +107,21 @@ malloc(size_t size)
 	struct region *region = find_free_region(size);
 
 	if (region == NULL) {
-		if (amount_of_mallocs >= MAX_BLOCKS){
+		if (amount_of_mallocs >= MAX_BLOCKS) {
 			return NULL;
-			}
+		}
 
 		region = grow_heap(SMALL_BLOCK_SIZE);
-		if (region == NULL){			
+		if (region == NULL) {
 			return NULL;
 		}
 	}
-	
 
-	if (region->size >= size + sizeof(struct region) + MIN_SIZE){		
+
+	if (region->size >= size + sizeof(struct region) + MIN_SIZE) {
 		split(region, size);
 	}
-	
+
 
 	region->free = false;
 
@@ -140,13 +140,13 @@ free(void *ptr)
 
 
 	struct region *curr = PTR2REGION(ptr);
-	assert(!curr->free); // TODO - replace this for error set
-	
+	assert(!curr->free);  // TODO - replace this for error set
+
 	// TODO - check here if it is a region struct allocated by malloc
 
 	curr->free = true;
-	
-	
+
+
 	coalesce(curr);
 
 	// updates statistics
@@ -189,7 +189,7 @@ split(struct region *region, size_t size)
 	new_region->free = true;
 	new_region->size = region->size - size - sizeof(struct region);
 	new_region->next = region->next;
-	if (new_region->next != NULL){
+	if (new_region->next != NULL) {
 		new_region->next->prev = new_region;
 	}
 	new_region->prev = region;
