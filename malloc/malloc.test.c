@@ -95,7 +95,9 @@ fail_if_requests_negative_amount(void)
 {
 	struct malloc_stats stats;
 
-	char *var = malloc(-1);
+	size_t neg_size = -1;
+
+	char *var = malloc(neg_size);
 	get_stats(&stats);
 
 	ASSERT_TRUE("[MALLOC - negative] should return NULL pointer", var == NULL);
