@@ -82,7 +82,6 @@ static void
 fail_if_malloc_exceeds_memory_limit(void)
 {
 	struct malloc_stats stats;
-	size_t SMALL_BLOCK_SIZE = 16384;
 
 	char *var = malloc(SMALL_BLOCK_SIZE + 1);  // TODO: AJUSTAR A MAS BLOQUES
 	get_stats(&stats);
@@ -111,9 +110,8 @@ alloc_min_size_if_requested_less(void)
 	char *var = malloc(1);
 
 	get_stats(&stats);
-	ASSERT_TRUE("[MALLOC - min] amount of requested memory should be 64 "
-	            "(min size)",
-	            var == NULL);
+	ASSERT_TRUE("[MALLOC - min] amount of requested memory should be min size",
+				 stats.requested_memory == MIN_SIZE);
 
 	free(var);
 }
