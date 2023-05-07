@@ -47,14 +47,14 @@ struct region *coalesce(struct region *region);
 static struct region *
 find_free_region(size_t size)
 {
-	struct region *next = blocks[0];
+	struct region *region_ptr = blocks[0];
 
 #ifdef FIRST_FIT
-	while (next != NULL) {
-		if (next->free && next->size >= size)
+	while (region_ptr != NULL) {
+		if (region_ptr->free && region_ptr->size >= size)
 			break;
 		else
-			next = next->next;
+			region_ptr = region_ptr->next;
 	}
 #endif
 
@@ -62,7 +62,7 @@ find_free_region(size_t size)
 	// Your code here for "best fit"
 #endif
 
-	return next;
+	return region_ptr;
 }
 
 static struct region *
@@ -107,19 +107,25 @@ malloc(size_t size)
 	if (size >= SMALL_BLOCK_SIZE - sizeof(struct region))
 		return NULL;
 
+
 	struct region *region = find_free_region(size);
 
 	if (region == NULL) {
-		if (amount_of_mallocs >= MAX_BLOCKS)
+		if (amount_of_mallocs >= MAX_BLOCKS){
 			return NULL;
+			}
 
 		region = grow_heap(SMALL_BLOCK_SIZE);
-		if (region == NULL)
+		if (region == NULL){			
 			return NULL;
+		}
 	}
+	
 
-	if (region->size >= size + sizeof(struct region) + MIN_SIZE)
+	if (region->size >= size + sizeof(struct region) + MIN_SIZE){		
 		split(region, size);
+	}
+	
 
 	region->free = false;
 
@@ -178,12 +184,14 @@ split(struct region *region, size_t size)
 	char *addr = ((char *) (region + 1)) + size;
 
 	struct region *new_region = (struct region *) addr;
+
 	new_region->free = true;
 	new_region->size = region->size - size - sizeof(struct region);
 	new_region->next = region->next;
-	new_region->next->prev = new_region;
+	if (new_region->next != NULL){
+		new_region->next->prev = new_region;
+	}
 	new_region->prev = region;
-
 	region->next = new_region;
 }
 
