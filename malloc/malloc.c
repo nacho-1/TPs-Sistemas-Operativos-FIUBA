@@ -20,7 +20,7 @@ struct region {
 	struct region *prev;
 };
 
-size_t blocks_size = 0;
+size_t blocks_mapped = 0;
 struct region *blocks[MAX_BLOCKS];
 
 int amount_of_mallocs = 0;
@@ -64,7 +64,7 @@ find_free_region(size_t size)
 static struct region *
 grow_heap(size_t size)
 {
-	if (blocks_size == MAX_BLOCKS)
+	if (blocks_mapped == MAX_BLOCKS)
 		return NULL;
 
 	struct region *mapping;
@@ -79,9 +79,9 @@ grow_heap(size_t size)
 	mapping->next = NULL;
 	mapping->prev = NULL;
 
-	blocks_size++;
-	blocks[blocks_size] = mapping;
-
+	blocks[blocks_mapped] = mapping;
+	blocks_mapped++;
+	
 	return mapping;
 }
 
@@ -138,10 +138,15 @@ free(void *ptr)
 	if (ptr == NULL)
 		return;
 
+
 	struct region *curr = PTR2REGION(ptr);
-	assert(!curr->free);
+	assert(!curr->free); // TODO - replace this for error set
+	
+	// TODO - check here if it is a region struct allocated by malloc
 
 	curr->free = true;
+	
+	
 	coalesce(curr);
 
 	// updates statistics
