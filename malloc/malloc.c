@@ -13,10 +13,6 @@
 #define REGION2PTR(r) ((r) + 1)
 #define PTR2REGION(ptr) ((struct region *) (ptr) -1)
 
-#define MAX_BLOCKS 1  // maximun ammount of blocks this library will support
-#define MIN_SIZE 64   // minimun size of a region
-#define SMALL_BLOCK_SIZE 16384
-
 struct region {
 	bool free;
 	size_t size;
