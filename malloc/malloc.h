@@ -1,7 +1,7 @@
 #ifndef _MALLOC_H_
 #define _MALLOC_H_
 
-#define MAX_BLOCKS 1  // maximun ammount of blocks this library will support
+#define MAX_BLOCKS 32  // maximun ammount of blocks this library will support
 #define MIN_SIZE 64   // minimun size of a region
 #define SMALL_BLOCK_SIZE 16384
 #define MEDIUM_BLOCK_SIZE 1048576
