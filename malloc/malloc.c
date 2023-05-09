@@ -20,8 +20,17 @@ struct region {
 	struct region *prev;
 };
 
+struct block {
+	size_t size;
+	struct region *first;
+	struct block *next;
+	void *ptr;
+};
+
 size_t blocks_mapped = 0;
-struct region *blocks[MAX_BLOCKS];
+struct block *small_blocks = NULL;
+struct block *medium_blocks = NULL;
+struct block *large_blocks = NULL;
 
 int amount_of_mallocs = 0;
 int amount_of_frees = 0;
@@ -39,18 +48,55 @@ struct region *merge(struct region *region);
  */
 struct region *coalesce(struct region *region);
 
-
 static struct region *
 find_free_region(size_t size)
 {
-	struct region *region_ptr = blocks[0];
+	struct block *block_ptr = small_blocks;
+	struct region *region_ptr = block_ptr->first;
 
 #ifdef FIRST_FIT
-	while (region_ptr != NULL) {
-		if (region_ptr->free && region_ptr->size >= size)
-			break;
-		else
-			region_ptr = region_ptr->next;
+	//search in small blocks list
+	while (block_ptr != NULL) {
+		while (region_ptr != NULL) {
+			if (region_ptr->free && region_ptr->size >= size)
+				break;
+			else
+				region_ptr = region_ptr->next;
+		}
+		if (region_ptr != NULL) break;
+		region_ptr = block_ptr->next;
+	}
+
+	if (region_ptr != NULL) {
+		//search in medium blocks list
+		block_ptr = medium_blocks;
+		region_ptr = block_ptr->first;
+		while (block_ptr != NULL) {
+			while (region_ptr != NULL) {
+				if (region_ptr->free && region_ptr->size >= size)
+					break;
+				else
+					region_ptr = region_ptr->next;
+			}
+			if (region_ptr != NULL) break;
+			region_ptr = block_ptr->next;
+		}
+	}
+
+	if (region_ptr != NULL) {
+		//search in large blocks list
+		block_ptr = large_blocks;
+		region_ptr = block_ptr->first;
+		while (block_ptr != NULL) {
+			while (region_ptr != NULL) {
+				if (region_ptr->free && region_ptr->size >= size)
+					break;
+				else
+					region_ptr = region_ptr->next;
+			}
+			if (region_ptr != NULL) break;
+			region_ptr = block_ptr->next;
+		}
 	}
 #endif
 
@@ -61,28 +107,52 @@ find_free_region(size_t size)
 	return region_ptr;
 }
 
-static struct region *
+static struct block *
 grow_heap(size_t size)
 {
-	if (blocks_mapped == MAX_BLOCKS)
-		return NULL;
+	if (blocks_mapped == MAX_BLOCKS) return NULL;
+	void *mapping = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
+	if (mapping == MAP_FAILED) return NULL;
 
-	struct region *mapping;
+	struct block *new_block = mapping;
+	new_block->ptr = (void *) mapping;
+	new_block->size = size;
+	new_block->first = mapping + sizeof(*new_block);
+	new_block->next = NULL;
 
-	mapping = mmap(
-	        NULL, size, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
-	if (mapping == MAP_FAILED)
-		return NULL;
+	if (size == SMALL_BLOCK_SIZE) {
+		if (!small_blocks) small_blocks = new_block;
+		else {
+			new_block->next = small_blocks;
+			small_blocks = new_block;
+		}
+	}
+	else if (size == MEDIUM_BLOCK_SIZE) {
+		if (!medium_blocks)
+			medium_blocks = new_block;
+		else {
+			new_block->next = medium_blocks;
+			medium_blocks = new_block;
+		}
+	}
+	else {
+		if (!large_blocks)
+			large_blocks = new_block;
+		else {
+			new_block->next = large_blocks;
+			large_blocks = new_block;
+		}
+	}
 
-	mapping->free = true;
-	mapping->size = size - sizeof(struct region);
-	mapping->next = NULL;
-	mapping->prev = NULL;
-
-	blocks[blocks_mapped] = mapping;
 	blocks_mapped++;
+	return new_block;
+}
 
-	return mapping;
+static size_t size_that_fits(size_t size) {
+	if (size > LARGE_BLOCK_SIZE) return 0; //no tengo en cuenta la metadata creo
+	if (size < SMALL_BLOCK_SIZE) return SMALL_BLOCK_SIZE;
+	if (size < MEDIUM_BLOCK_SIZE) return MEDIUM_BLOCK_SIZE;
+	else return LARGE_BLOCK_SIZE;
 }
 
 /// Public API of malloc library ///
@@ -90,7 +160,7 @@ grow_heap(size_t size)
 void *
 malloc(size_t size)
 {
-	if ((int) size <= 0)
+	if ((int) size <= 0 || (int) size >= LARGE_BLOCK_SIZE)
 		return NULL;
 
 	// aligns to multiple of 4 bytes
@@ -99,19 +169,15 @@ malloc(size_t size)
 	// minimun size of region is MIN_SIZE
 	size = size > MIN_SIZE ? size : MIN_SIZE;
 
-	// TODO: blocks of different sizes
 	if (size >= SMALL_BLOCK_SIZE - sizeof(struct region))
 		return NULL;
-
 
 	struct region *region = find_free_region(size);
 
 	if (region == NULL) {
-		if (amount_of_mallocs >= MAX_BLOCKS) {
-			return NULL;
-		}
+		size_t block_size = size_that_fits(size);
+		region = grow_heap(block_size)->first;
 
-		region = grow_heap(SMALL_BLOCK_SIZE);
 		if (region == NULL) {
 			return NULL;
 		}
