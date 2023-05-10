@@ -115,6 +115,19 @@ static struct region *find_in_block(struct region *first, size_t size)
 #endif
 #ifdef BEST_FIT
 	// Your code here for "best fit"
+	struct region* best_region = NULL;
+	while (region != NULL) {
+		if (region->free && region->size >= size) {
+			if (best_region == NULL) {
+				best_region = region;
+			} else if (region->size < best_region->size) {
+				best_region = region;
+			}
+			region = region->next;
+		} else
+			region = region->next;
+	}
+	region = best_region;
 #endif
 	return region;
 }
