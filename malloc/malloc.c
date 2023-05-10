@@ -11,8 +11,8 @@
 
 #define ALIGN4(s) (((((s) -1) >> 2) << 2) + 4)
 #define REGION2PTR(r) ((r) + 1)
-#define PTR2REGION(ptr) ((struct region *) (ptr) - 1)
-#define REGION2BLOCK(r) ((struct block *) (r) - 1)
+#define PTR2REGION(ptr) ((struct region *) (ptr) -1)
+#define REGION2BLOCK(r) ((struct block *) (r) -1)
 #define BLOCK2REGION(b) ((b) + 1)
 
 
@@ -70,20 +70,22 @@ find_free_region(size_t size)
 
 	struct region *region = NULL;
 
-	//search in small blocks list
+	// search in small blocks list
 	struct block *curr_block = small_blocks;
 	while (curr_block != NULL) {
-		region = find_in_block((struct region *) BLOCK2REGION(curr_block), size);
+		region = find_in_block((struct region *) BLOCK2REGION(curr_block),
+		                       size);
 		if (region != NULL)
 			return region;
 		else
 			curr_block = curr_block->next;
 	}
 
-	//search in medium blocks list
+	// search in medium blocks list
 	curr_block = medium_blocks;
 	while (curr_block != NULL) {
-		region = find_in_block((struct region *) BLOCK2REGION(curr_block), size);
+		region = find_in_block((struct region *) BLOCK2REGION(curr_block),
+		                       size);
 		if (region != NULL)
 			return region;
 		else
@@ -92,17 +94,19 @@ find_free_region(size_t size)
 
 	curr_block = large_blocks;
 	while (curr_block != NULL) {
-		region = find_in_block((struct region *) BLOCK2REGION(curr_block), size);
+		region = find_in_block((struct region *) BLOCK2REGION(curr_block),
+		                       size);
 		if (region != NULL)
 			return region;
 		else
 			curr_block = curr_block->next;
 	}
 
-	return NULL; // couldn't find any free region for size in any block
+	return NULL;  // couldn't find any free region for size in any block
 }
 
-static struct region *find_in_block(struct region *first, size_t size)
+static struct region *
+find_in_block(struct region *first, size_t size)
 {
 	struct region *region = first;
 #ifdef FIRST_FIT
@@ -115,7 +119,7 @@ static struct region *find_in_block(struct region *first, size_t size)
 #endif
 #ifdef BEST_FIT
 	// Your code here for "best fit"
-	struct region* best_region = NULL;
+	struct region *best_region = NULL;
 	while (region != NULL) {
 		if (region->free && region->size >= size) {
 			if (best_region == NULL) {
@@ -143,10 +147,11 @@ grow_heap(size_t size)
 		return NULL;
 
 	size = size_that_fits(size);
-	if (size == 0) // can't fit
+	if (size == 0)  // can't fit
 		return NULL;
 
-	void *mapping = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
+	void *mapping = mmap(
+	        NULL, size, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
 	if (mapping == MAP_FAILED)
 		return NULL;
 
@@ -176,7 +181,9 @@ grow_heap(size_t size)
 	return region;
 }
 
-static size_t size_that_fits(size_t size) {
+static size_t
+size_that_fits(size_t size)
+{
 	size_t header_size = sizeof(struct block) + sizeof(struct region);
 	if (size <= SMALL_BLOCK_SIZE - header_size)
 		return SMALL_BLOCK_SIZE;
@@ -185,7 +192,7 @@ static size_t size_that_fits(size_t size) {
 	else if (size <= LARGE_BLOCK_SIZE - header_size)
 		return LARGE_BLOCK_SIZE;
 	else
-		return 0; // too big
+		return 0;  // too big
 }
 
 /// Public API of malloc library ///
@@ -204,10 +211,10 @@ malloc(size_t size)
 
 	struct region *region = find_free_region(size);
 
-	if (region == NULL) { // Couldn't find in any block
+	if (region == NULL) {  // Couldn't find in any block
 		region = grow_heap(size);
 
-		if (region == NULL) // Couldn't create new block
+		if (region == NULL)  // Couldn't create new block
 			return NULL;
 	}
 
@@ -242,8 +249,9 @@ free(void *ptr)
 	// updates statistics
 	amount_of_frees++;
 
-	if (curr->next == NULL && curr->prev == NULL) { // block is empty
-		size_t block_size = curr->size + sizeof(struct block) + sizeof(struct region);
+	if (curr->next == NULL && curr->prev == NULL) {  // block is empty
+		size_t block_size = curr->size + sizeof(struct block) +
+		                    sizeof(struct region);
 		unmap((struct block *) REGION2BLOCK(curr), block_size);
 	}
 }
@@ -324,14 +332,15 @@ coalesce(struct region *region)
 	return region;
 }
 
-static void unmap(struct block *block, size_t size)
+static void
+unmap(struct block *block, size_t size)
 {
 	if (block->next != NULL)
 		block->next->prev = block->prev;
 
 	if (block->prev != NULL) {
 		block->prev->next = block->next;
-	} else { // block list points to me
+	} else {  // block list points to me
 		if (size == SMALL_BLOCK_SIZE)
 			small_blocks = block->next;
 		else if (size == MEDIUM_BLOCK_SIZE)
