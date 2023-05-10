@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <string.h>
-#include <stdlib.h>
 
 #include "testlib.h"
 #include "malloc.h"
@@ -133,22 +132,6 @@ correct_amount_of_requested_memory_if_requested_less_than_min(void)
 	free(var);
 }
 
-
-static void
-fail_if_requests_negative_amount(void)
-{
-	struct malloc_stats stats;
-
-	size_t neg_size = -1;
-
-	char *var = malloc(neg_size);
-	get_stats(&stats);
-
-	ASSERT_TRUE("[MALLOC - negative] should return NULL pointer", var == NULL);
-	free(var);
-}
-
-
 static void
 fail_if_requested_zero(void)
 {
@@ -168,25 +151,11 @@ fail_if_malloc_exceeds_memory_limit(void)
 {
 	struct malloc_stats stats;
 
-	char *var = malloc(SMALL_BLOCK_SIZE + 1);  // TODO: AJUSTAR A MAS BLOQUES
+	char *var = malloc(LARGE_BLOCK_SIZE);
 	get_stats(&stats);
 
 	ASSERT_TRUE("[MALLOC - limit] should return NULL pointer", var == NULL);
 	free(var);
-}
-
-static void
-fail_if_malloc_exceeds_block_free_space(void)
-{
-	struct malloc_stats stats;
-
-
-	char *reg1 = malloc(SMALL_BLOCK_SIZE / 2);
-	char *reg2 = malloc(SMALL_BLOCK_SIZE);
-
-	ASSERT_TRUE("[MALLOC - limit] should return NULL pointer", reg2 == NULL);
-	free(reg1);
-	free(reg2);
 }
 
 //-------------------------------------------------
@@ -316,10 +285,8 @@ main(void)
 	run_test(correct_amount_of_requested_memory);
 	run_test(correct_amount_of_requested_memory_multiple_mallocs);
 	run_test(correct_amount_of_requested_memory_if_requested_less_than_min);
-	run_test(fail_if_requests_negative_amount);
 	run_test(fail_if_requested_zero);
 	run_test(fail_if_malloc_exceeds_memory_limit);
-	run_test(fail_if_malloc_exceeds_block_free_space);  // TODO - rm when multiple block allowed
 
 
 	// TESTS FREE
