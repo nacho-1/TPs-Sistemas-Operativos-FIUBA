@@ -155,21 +155,19 @@ grow_heap(size_t size)
 
 	if (size == SMALL_BLOCK_SIZE) {
 		new_block->next = small_blocks;
-		if (small_blocks == NULL)
-			small_blocks = new_block;
+		small_blocks = new_block;
 	} else if (size == MEDIUM_BLOCK_SIZE) {
 		new_block->next = medium_blocks;
-		if (medium_blocks == NULL)
-			medium_blocks = new_block;
+		medium_blocks = new_block;
 	} else {
 		new_block->next = large_blocks;
-		if (large_blocks == NULL)
-			large_blocks = new_block;
+		large_blocks = new_block;
 	}
 	if (new_block->next != NULL)
 		new_block->next->prev = new_block;
 	blocks_mapped++;
 
+	// Initialize the first region of the block.
 	struct region *region = (struct region *) BLOCK2REGION(new_block);
 	region->free = true;
 	region->size = size - sizeof(struct block) - sizeof(struct region);
@@ -195,7 +193,7 @@ static size_t size_that_fits(size_t size) {
 void *
 malloc(size_t size)
 {
-	if ((int) size == 0)
+	if (size == 0)
 		return NULL;
 
 	// aligns to multiple of 4 bytes
@@ -277,6 +275,9 @@ get_stats(struct malloc_stats *stats)
 void
 split(struct region *region, size_t size)
 {
+	if (region == NULL)
+		return;
+
 	assert(region->size > size + sizeof(struct region));
 
 	char *addr = ((char *) (region + 1)) + size;
@@ -290,6 +291,7 @@ split(struct region *region, size_t size)
 		new_region->next->prev = new_region;
 	}
 	new_region->prev = region;
+	region->size = size;
 	region->next = new_region;
 }
 
