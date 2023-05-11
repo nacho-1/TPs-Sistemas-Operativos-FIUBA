@@ -571,6 +571,30 @@ calloc_buffer_should_initialize_with_ceros(void)
 	            success);
 }
 
+//-------------------------------------------------
+// TESTS REALLOC
+//-------------------------------------------------
+
+static void
+realloc_should_allow_writing_more_elements(void)
+{
+	char *string1 = "Hola ";
+	char *string2 = "Mundo.";
+	size_t len_str1 = strlen(string1);
+	size_t len_str2 = strlen(string2);
+
+	char *string = malloc(len_str1);
+	strncat(string, string1, len_str1);
+
+	char *new_string = (char *) realloc(string, len_str1 + len_str2);
+	strncat(new_string, string2, len_str2);
+
+	ASSERT_TRUE("[REALLOC - basic] concat a string, realloc and then "
+	            "concat another string",
+	            strcmp(new_string, "Hola Mundo.") == 0);
+	free(new_string);
+}
+
 int
 main(void)
 {
@@ -613,6 +637,9 @@ main(void)
 
 	// TEST CALLOC
 	run_test(calloc_buffer_should_initialize_with_ceros);
+
+	// TEST REALLOC
+	run_test(realloc_should_allow_writing_more_elements);
 
 	return 0;
 }
