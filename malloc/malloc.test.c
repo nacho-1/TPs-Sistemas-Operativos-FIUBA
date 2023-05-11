@@ -225,6 +225,24 @@ malloc_multiple_blocks(void)
 }
 
 static void
+malloc_max_blocks_limit(void)
+{
+	struct malloc_stats stats;
+	char *matrix[50];
+	for (int i = 0; i < 50; i++) {
+		matrix[i] = malloc(LARGE_BLOCK_SIZE * 2 / 3);
+	}
+
+	get_stats(&stats);
+	ASSERT_TRUE(
+	        "[MALLOC - max blocks limit] max amount of blocks should be 32",
+	        stats.blocks == 32);
+	for (int i = 0; i < 50; i++) {
+		free(matrix[i]);
+	}
+}
+
+static void
 malloc_only_one_block_when_enough_memory(void)
 {
 	struct malloc_stats stats;
@@ -270,7 +288,7 @@ correct_amount_of_frees_multiple_mallocs(void)
 	}
 
 	get_stats(&stats);
-	ASSERT_TRUE("[FREE - stats] amount of mallocs should be 10",
+	ASSERT_TRUE("[FREE - stats] amount of frees should be 10",
 	            stats.frees == 10);
 }
 
@@ -373,6 +391,7 @@ main(void)
 	run_test(malloc_large_block_size);
 	run_test(malloc_multiple_blocks);
 	run_test(malloc_only_one_block_when_enough_memory);
+	run_test(malloc_max_blocks_limit);
 
 
 	// TESTS FREE
