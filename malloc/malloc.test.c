@@ -548,6 +548,29 @@ free_all_regions_of_multiple_blocks_should_unmap_all_blocks(void)
 	            stats.blocks == 0);
 }
 
+//-------------------------------------------------
+// TESTS CALLOC
+//-------------------------------------------------
+static void
+calloc_buffer_should_initialize_with_ceros(void)
+{
+	int buf_size = 5;
+	int *buf = (int *) calloc(buf_size, sizeof(int));
+	int success = 0;
+	for (int i = 0; i < buf_size; i++) {
+		if (buf[i] != 0) {
+			success = 0;
+			break;
+		} else {
+			success = 1;
+		}
+	}
+	free(buf);
+	ASSERT_TRUE("[CALLOC - basic] calloc for a buffer should initialize "
+	            "all elements with 0",
+	            success);
+}
+
 int
 main(void)
 {
@@ -587,6 +610,9 @@ main(void)
 	run_test(free_two_allocs_of_different_regions_size_should_unmap_blocks);
 	run_test(free_all_regions_of_multiple_blocks_of_diff_type_should_unmap_all_blocks);
 	run_test(free_all_regions_of_multiple_blocks_should_unmap_all_blocks);
+
+	// TEST CALLOC
+	run_test(calloc_buffer_should_initialize_with_ceros);
 
 	return 0;
 }

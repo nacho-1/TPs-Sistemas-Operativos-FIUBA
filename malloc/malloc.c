@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/mman.h>
+#include <string.h>
 
 #include "malloc.h"
 #include "printfmt.h"
@@ -254,15 +255,19 @@ free(void *ptr)
 		                    sizeof(struct region);
 		unmap((struct block *) REGION2BLOCK(curr), block_size);
 	}
-	ptr = NULL;
 }
 
 void *
 calloc(size_t nmemb, size_t size)
 {
-	// Your code here
+	void *ptr = malloc(nmemb * size);
 
-	return NULL;
+	if (ptr == NULL) {
+		return NULL;
+	}
+
+	memset(ptr, 0, nmemb * size);
+	return ptr;
 }
 
 void *
