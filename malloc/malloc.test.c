@@ -101,7 +101,6 @@ correct_amount_of_requested_memory_multiple_mallocs(void)
 {
 	struct malloc_stats stats;
 	int malloc_requests = 10;
-	int total_size_requested = 1000;
 	char *var;
 
 	for (int i = 0; i < malloc_requests; i++) {
@@ -155,6 +154,48 @@ fail_if_malloc_exceeds_memory_limit(void)
 	get_stats(&stats);
 
 	ASSERT_TRUE("[MALLOC - limit] should return NULL pointer", var == NULL);
+	free(var);
+}
+
+static void
+malloc_small_block_size(void)
+{
+	struct malloc_stats stats;
+
+	char *var = malloc(100);
+
+	get_stats(&stats);
+	ASSERT_TRUE("[MALLOC - small] amount of requested memory should be less than medium block size", stats.requested_memory <= SMALL_BLOCK_SIZE);
+	ASSERT_TRUE("[MALLOC - small] amount of blocks should be 1", stats.blocks == 1);
+
+	free(var);
+}
+
+static void
+malloc_medium_block_size(void)
+{
+	struct malloc_stats stats;
+
+	char *var = malloc(SMALL_BLOCK_SIZE+1);
+
+	get_stats(&stats);
+	ASSERT_TRUE("[MALLOC - medium] amount of requested memory should be greater than small block size", stats.requested_memory >= SMALL_BLOCK_SIZE+1);
+	ASSERT_TRUE("[MALLOC - medium] amount of blocks should be 1", stats.blocks == 1);
+
+	free(var);
+}
+
+static void
+malloc_large_block_size(void)
+{
+	struct malloc_stats stats;
+
+	char *var = malloc(MEDIUM_BLOCK_SIZE+1);
+
+	get_stats(&stats);
+	ASSERT_TRUE("[MALLOC - large] amount of requested memory should be greater than medium block size", stats.requested_memory >= MEDIUM_BLOCK_SIZE);
+	ASSERT_TRUE("[MALLOC - large] amount of blocks should be 1", stats.blocks == 1);
+
 	free(var);
 }
 
@@ -287,6 +328,9 @@ main(void)
 	run_test(correct_amount_of_requested_memory_if_requested_less_than_min);
 	run_test(fail_if_requested_zero);
 	run_test(fail_if_malloc_exceeds_memory_limit);
+	run_test(malloc_small_block_size);
+	run_test(malloc_medium_block_size);
+	run_test(malloc_large_block_size);
 
 
 	// TESTS FREE

@@ -11,6 +11,7 @@ struct malloc_stats {
 	int mallocs;
 	int frees;
 	int requested_memory;
+	int blocks;
 };
 
 void *malloc(size_t size);

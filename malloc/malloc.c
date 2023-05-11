@@ -278,6 +278,7 @@ get_stats(struct malloc_stats *stats)
 	stats->mallocs = amount_of_mallocs;
 	stats->frees = amount_of_frees;
 	stats->requested_memory = requested_memory;
+	stats->blocks = blocks_mapped;
 }
 
 void
