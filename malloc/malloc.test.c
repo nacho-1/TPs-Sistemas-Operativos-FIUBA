@@ -199,6 +199,35 @@ malloc_large_block_size(void)
 	free(var);
 }
 
+static void
+malloc_multiple_blocks(void)
+{
+	struct malloc_stats stats;
+
+	char *var = malloc(16000);
+	char *var2 = malloc(16000);
+
+	get_stats(&stats);
+	ASSERT_TRUE("[MALLOC - multiple blocks] amount of blocks should be 2", stats.blocks == 2);
+
+	free(var);
+	free(var2);
+}
+
+static void
+malloc_only_one_block_when_enough_memory(void)
+{
+	struct malloc_stats stats;
+
+	char *var = malloc(10);
+	char *var2 = malloc(15);
+
+	get_stats(&stats);
+	ASSERT_TRUE("[MALLOC - one block] amount of blocks should be 1", stats.blocks == 1);
+
+	free(var);
+	free(var2);
+}
 //-------------------------------------------------
 // TESTS FREE
 //-------------------------------------------------
@@ -331,16 +360,18 @@ main(void)
 	run_test(malloc_small_block_size);
 	run_test(malloc_medium_block_size);
 	run_test(malloc_large_block_size);
+	run_test(malloc_multiple_blocks);
+	run_test(malloc_only_one_block_when_enough_memory);
 
 
-	// TESTS FREE
+	 //TESTS FREE
 	run_test(correct_amount_of_frees);
 	run_test(correct_amount_of_frees_multiple_mallocs);
 	run_test(correct_amount_of_frees_if_free_null_pointer);
 	run_test(alloc_space_free);
 	run_test(free_with_coalesce);
-	run_test(fail_if_double_free);   // TODO - implement check
-	run_test(fail_if_invalid_free);  // TODO - implement check
+	run_test(fail_if_double_free);    //TODO - implement check
+	run_test(fail_if_invalid_free);   //TODO - implement check
 
 	return 0;
 }
