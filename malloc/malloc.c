@@ -271,9 +271,13 @@ calloc(size_t nmemb, size_t size)
 void *
 realloc(void *ptr, size_t size)
 {
+	if (size == 0 && ptr != NULL) {
+		free(ptr);
+		return NULL;
+	}
 	void *new_ptr = malloc(size);
 
-	if (ptr != NULL) {
+	if (ptr != NULL && new_ptr != NULL) {
 		struct region *current = PTR2REGION(ptr);
 		size_t size_to_cpy = current->size < size ? current->size : size;
 		memcpy(new_ptr, ptr, size_to_cpy);

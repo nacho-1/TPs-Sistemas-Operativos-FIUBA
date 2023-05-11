@@ -577,21 +577,81 @@ calloc_buffer_should_initialize_with_ceros(void)
 static void
 realloc_should_allow_writing_more_elements(void)
 {
-	char *string1 = "Hola ";
-	char *string2 = "Mundo.";
-	size_t len_str1 = strlen(string1);
-	size_t len_str2 = strlen(string2);
+	int *nums = calloc(64, 64 * sizeof(int));
+	for (int i = 0; i < 64; i++) {
+		nums[i] += i;
+	}
+	int *more_nums = realloc(nums, 128 * sizeof(int));
+	for (int i = 64; i < 128; i++) {
+		more_nums[i] = 0;
+		more_nums[i] += i;
+	}
+	int success = 0;
+	for (int i = 0; i < 128; i++) {
+		if (more_nums[i] != i) {
+			success = 0;
+			break;
+		} else {
+			success = 1;
+		}
+	}
+	ASSERT_TRUE("[REALLOC - basic adding] allocate an array for numbers, "
+	            "then reallocate and adding more numbers should work",
+	            success);
+}
 
-	char *string = malloc(len_str1);
-	strncat(string, string1, len_str1);
+static void
+realloc_with_null_pointer_is_a_malloc(void)
+{
+	char *var = realloc(NULL, SMALL_BLOCK_SIZE / 2);
+	char *string = "Hola mundo!";
+	strncat(var, string, strlen(string));
+	ASSERT_TRUE("[REALLOC - malloc when null] realloc is a malloc if ptr "
+	            "is NULL",
+	            strcmp(var, "Hola mundo!") == 0);
+}
 
-	char *new_string = (char *) realloc(string, len_str1 + len_str2);
-	strncat(new_string, string2, len_str2);
+static void
+realloc_with_zero_size_is_a_free(void)
+{
+	char *var = malloc(64);
+	realloc(var, 0);
 
-	ASSERT_TRUE("[REALLOC - basic] concat a string, realloc and then "
-	            "concat another string",
-	            strcmp(new_string, "Hola Mundo.") == 0);
-	free(new_string);
+	struct malloc_stats stats;
+	get_stats(&stats);
+
+	ASSERT_TRUE("[REALLOC - free when zero] realloc is a free if size is "
+	            "zero and ptr not NULL",
+	            stats.frees == 1 && stats.blocks == 0);
+}
+
+static void
+realloc_doesnt_modify_when_fails(void)
+{
+	int *nums = calloc(64, 64 * sizeof(int));
+	for (int i = 0; i < 64; i++) {
+		nums[i] += i;
+	}
+
+	int *more_nums = realloc(nums, LARGE_BLOCK_SIZE);
+
+	struct malloc_stats stats;
+	get_stats(&stats);
+
+	int not_change = 0;
+	if (stats.blocks == 1) {
+		for (int i = 0; i < 64; i++) {
+			if (nums[i] != i) {
+				not_change = 0;
+				break;
+			} else {
+				not_change = 1;
+			}
+		}
+	}
+	ASSERT_TRUE("[REALLOC - fail] on failure realloc doesnt change "
+	            "original pointer content",
+	            not_change && more_nums == NULL);
 }
 
 int
@@ -639,6 +699,9 @@ main(void)
 
 	// TEST REALLOC
 	run_test(realloc_should_allow_writing_more_elements);
+	run_test(realloc_with_null_pointer_is_a_malloc);
+	run_test(realloc_with_zero_size_is_a_free);
+	run_test(realloc_doesnt_modify_when_fails);
 
 	return 0;
 }
