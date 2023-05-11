@@ -38,19 +38,19 @@ int requested_memory = 0;
 
 static size_t size_that_fits(size_t size);
 
-void split(struct region *region, size_t size);
+static void split(struct region *region, size_t size);
 
 /*
  * Merge region with its next region into one.
  */
-struct region *merge(struct region *region);
+static struct region *merge(struct region *region);
 
 /*
  * Coalesce region with its adjacent ones.
  * Return a pointer to the region that contains
  * the parameter region.
  */
-struct region *coalesce(struct region *region);
+static struct region *coalesce(struct region *region);
 
 static void unmap(struct block *block, size_t size);
 
@@ -344,7 +344,7 @@ coalesce(struct region *region)
 	return region;
 }
 
-static void
+void
 unmap(struct block *block, size_t size)
 {
 	if (block->next != NULL)
