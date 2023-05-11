@@ -2,13 +2,11 @@
 
 #include <assert.h>
 #include <stdbool.h>
-#include <stdlib.h>
-#include <unistd.h>
+#include <errno.h>
 #include <sys/mman.h>
 #include <string.h>
-
+#include <stddef.h>
 #include "malloc.h"
-#include "printfmt.h"
 
 #define ALIGN4(s) (((((s) -1) >> 2) << 2) + 4)
 #define REGION2PTR(r) ((r) + 1)
