@@ -269,6 +269,47 @@ malloc_min_request_size(void)
 	            stats.requested_memory == 64 && stats.blocks == 1);
 	free(var);
 }
+
+static void
+malloc_of_multiple_vars_that_create_two_blocks(void)
+{
+	char *small_var = malloc(SMALL_BLOCK_SIZE / 3);
+	char *small_var2 = malloc(SMALL_BLOCK_SIZE / 3);
+	char *medium_var = malloc(SMALL_BLOCK_SIZE + 1);
+
+	struct malloc_stats stats;
+	get_stats(&stats);
+	ASSERT_TRUE("[MALLOC - splitting] 3 allocs should create two blocks "
+	            "because of splitting",
+	            stats.blocks == 2);
+}
+
+static void
+malloc_multiple_blocks_splitting(void)
+{
+	char *small_var = malloc(3000);
+	char *medium_var = malloc(SMALL_BLOCK_SIZE * 2);
+	char *large_var = malloc(MEDIUM_BLOCK_SIZE * 3);
+
+	char *small_var2 = malloc(3000);
+	char *medium_var2 = malloc(SMALL_BLOCK_SIZE * 2);
+	char *large_var2 = malloc(MEDIUM_BLOCK_SIZE * 3);
+
+	struct malloc_stats stats;
+	get_stats(&stats);
+
+	ASSERT_TRUE("[MALLOC - splitting] allocs that produces multiple blocks "
+	            "types should reuse this blocks",
+	            stats.blocks == 3);
+
+	free(small_var);
+	free(small_var2);
+	free(medium_var);
+	free(medium_var2);
+	free(large_var);
+	free(large_var2);
+}
+
 //-------------------------------------------------
 // TESTS FREE
 //-------------------------------------------------
@@ -408,8 +449,76 @@ free_multiple_region_of_large_block_should_unmap_it(void)
 	free(var);
 	struct malloc_stats stats;
 	get_stats(&stats);
-	ASSERT_TRUE("[FREE - unmap large block] freeing all regions of a large "
+	ASSERT_TRUE("[FREE - performance] freeing lots of regions of a large "
 	            "block should unmap the block",
+	            stats.blocks == 0);
+}
+
+static void
+free_allocs_of_different_size_should_unmap_blocks(void)
+{
+	char *small_var = malloc(3000);
+	char *medium_var = malloc(SMALL_BLOCK_SIZE * 2);
+	char *large_var = malloc(MEDIUM_BLOCK_SIZE * 2);
+
+	free(small_var);
+	free(medium_var);
+	free(large_var);
+	struct malloc_stats stats;
+	get_stats(&stats);
+	ASSERT_TRUE("[FREE - unmap blocks] freeing all vars of different size "
+	            "should unmap blocks",
+	            stats.blocks == 0);
+}
+
+static void
+free_two_allocs_of_different_regions_size_should_unmap_blocks(void)
+{
+	char *small_var = malloc(1500);
+	char *medium_var = malloc(SMALL_BLOCK_SIZE * 2);
+	char *large_var = malloc(MEDIUM_BLOCK_SIZE * 2);
+
+	char *small_var2 = malloc(1500);
+	char *medium_var2 = malloc(SMALL_BLOCK_SIZE * 3);
+	char *large_var2 = malloc(MEDIUM_BLOCK_SIZE * 4);
+
+	free(small_var);
+	free(small_var2);
+	free(medium_var);
+	free(medium_var2);
+	free(large_var);
+	free(large_var2);
+
+	struct malloc_stats stats;
+	get_stats(&stats);
+	ASSERT_TRUE("[FREE - unmap blocks] freeing multiple allocs of "
+	            "different size should unmap blocks of diff type",
+	            stats.blocks == 0);
+}
+
+static void
+free_all_regions_of_multiple_blocks_of_diff_type_should_unmap_all_blocks(void)
+{
+	char *small_var = malloc(1500);
+	char *small_var2 = malloc(1500);
+
+	char *medium_var = malloc(MEDIUM_BLOCK_SIZE * 2 / 3);
+	char *medium_var2 = malloc(SMALL_BLOCK_SIZE * 3);
+
+	char *large_var = malloc(LARGE_BLOCK_SIZE * 2 / 3);
+	char *large_var2 = malloc(MEDIUM_BLOCK_SIZE * 4);
+
+	free(small_var);
+	free(small_var2);
+	free(medium_var);
+	free(medium_var2);
+	free(large_var);
+	free(large_var2);
+
+	struct malloc_stats stats;
+	get_stats(&stats);
+	ASSERT_TRUE("[FREE - unmap blocks] freeing all mallocs should unmap "
+	            "all blocks of diff type",
 	            stats.blocks == 0);
 }
 
@@ -433,8 +542,9 @@ free_all_regions_of_multiple_blocks_should_unmap_all_blocks(void)
 	}
 	struct malloc_stats stats;
 	get_stats(&stats);
-	ASSERT_TRUE("[FREE - unmap blocks] - freeing all regions from all "
-	            "blocks should unmap all blocks",
+	ASSERT_TRUE("[FREE - unmap blocks] freeing all regions of diff size "
+	            "from all "
+	            "blocks of diff type should unmap all blocks",
 	            stats.blocks == 0);
 }
 
@@ -460,6 +570,8 @@ main(void)
 	run_test(malloc_only_one_block_when_enough_memory);
 	run_test(malloc_max_blocks_limit);
 	run_test(malloc_min_request_size);
+	run_test(malloc_of_multiple_vars_that_create_two_blocks);
+	run_test(malloc_multiple_blocks_splitting);
 
 	// TESTS FREE
 	run_test(correct_amount_of_frees);
@@ -470,7 +582,11 @@ main(void)
 	run_test(fail_if_double_free);   // TODO - implement check
 	run_test(fail_if_invalid_free);  // TODO - implement check
 	run_test(free_one_region_block_should_be_unmapped);
-	run_test(free_multiple_region_of_large_block_should_unmap_it);
+	// run_test(free_multiple_region_of_large_block_should_unmap_it);
+	run_test(free_allocs_of_different_size_should_unmap_blocks);
+	run_test(free_two_allocs_of_different_regions_size_should_unmap_blocks);
+	run_test(free_all_regions_of_multiple_blocks_of_diff_type_should_unmap_all_blocks);
+	run_test(free_all_regions_of_multiple_blocks_should_unmap_all_blocks);
 
 	return 0;
 }

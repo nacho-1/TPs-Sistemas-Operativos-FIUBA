@@ -244,7 +244,7 @@ free(void *ptr)
 
 	curr->free = true;
 
-	coalesce(curr);
+	curr = coalesce(curr);
 
 	// updates statistics
 	amount_of_frees++;
@@ -254,6 +254,7 @@ free(void *ptr)
 		                    sizeof(struct region);
 		unmap((struct block *) REGION2BLOCK(curr), block_size);
 	}
+	ptr = NULL;
 }
 
 void *
