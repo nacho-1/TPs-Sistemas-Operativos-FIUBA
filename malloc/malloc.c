@@ -14,7 +14,7 @@
 #define PTR2REGION(ptr) ((struct region *) (ptr) -1)
 #define REGION2BLOCK(r) ((struct block *) (r) -1)
 #define BLOCK2REGION(b) ((b) + 1)
-
+#define FIRST_FIT
 
 struct region {
 	bool free;
