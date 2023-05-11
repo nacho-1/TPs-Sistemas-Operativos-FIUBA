@@ -258,11 +258,15 @@ malloc_max_blocks_limit(void)
 	}
 }
 
-static void malloc_min_request_size(void) {
+static void
+malloc_min_request_size(void)
+{
 	struct malloc_stats stats;
 	char *var = malloc(10);
 	get_stats(&stats);
-	ASSERT_TRUE("[MALLOC - min request size] requesting less than 64 should allocate 64", stats.requested_memory == 64 && stats.blocks == 1);
+	ASSERT_TRUE("[MALLOC - min request size] requesting less than 64 "
+	            "should allocate 64",
+	            stats.requested_memory == 64 && stats.blocks == 1);
 	free(var);
 }
 //-------------------------------------------------
@@ -377,12 +381,61 @@ fail_if_invalid_free(void)
 	//             0 == 1);
 }
 
-static void free_one_region_block_should_be_unmapped(void) {
+static void
+free_one_region_block_should_be_unmapped(void)
+{
 	char *var = malloc(10);
 	struct malloc_stats stats;
 	free(var);
 	get_stats(&stats);
-	ASSERT_TRUE("[FREE - one region block] a block with a single region being freed should be unmapped", stats.blocks == 0);
+	ASSERT_TRUE("[FREE - unmap block] a block with a single region being "
+	            "freed should be unmapped",
+	            stats.blocks == 0);
+}
+
+static void
+free_multiple_region_of_large_block_should_unmap_it(void)
+{
+	// Ask for a large block.
+	char *var = malloc(MEDIUM_BLOCK_SIZE + 1);
+	char *vars[50000];
+	for (int i = 0; i < 50000; i++) {
+		vars[i] = malloc(64);
+	}
+	for (int i = 0; i < 50000; i++) {
+		free(vars[i]);
+	}
+	free(var);
+	struct malloc_stats stats;
+	get_stats(&stats);
+	ASSERT_TRUE("[FREE - unmap large block] freeing all regions of a large "
+	            "block should unmap the block",
+	            stats.blocks == 0);
+}
+
+static void
+free_all_regions_of_multiple_blocks_should_unmap_all_blocks(void)
+{
+	char *small[216];
+	char *medium[216];
+	char *large[216];
+	// small blocks
+	for (int i = 0; i < 216; i++) {
+		small[i] = malloc(64);
+		medium[i] = malloc(SMALL_BLOCK_SIZE + 1);
+		large[i] = malloc(MEDIUM_BLOCK_SIZE + 1);
+	}
+
+	for (int i = 0; i < 216; i++) {
+		free(small[i]);
+		free(medium[i]);
+		free(large[i]);
+	}
+	struct malloc_stats stats;
+	get_stats(&stats);
+	ASSERT_TRUE("[FREE - unmap blocks] - freeing all regions from all "
+	            "blocks should unmap all blocks",
+	            stats.blocks == 0);
 }
 
 int
@@ -417,6 +470,7 @@ main(void)
 	run_test(fail_if_double_free);   // TODO - implement check
 	run_test(fail_if_invalid_free);  // TODO - implement check
 	run_test(free_one_region_block_should_be_unmapped);
+	run_test(free_multiple_region_of_large_block_should_unmap_it);
 
 	return 0;
 }
