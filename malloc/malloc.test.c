@@ -225,6 +225,22 @@ malloc_multiple_blocks(void)
 }
 
 static void
+malloc_only_one_block_when_enough_memory(void)
+{
+	struct malloc_stats stats;
+
+	char *var = malloc(10);
+	char *var2 = malloc(15);
+
+	get_stats(&stats);
+	ASSERT_TRUE("[MALLOC - one block] amount of blocks should be 1",
+	            stats.blocks == 1);
+
+	free(var);
+	free(var2);
+}
+
+static void
 malloc_max_blocks_limit(void)
 {
 	struct malloc_stats stats;
@@ -242,20 +258,12 @@ malloc_max_blocks_limit(void)
 	}
 }
 
-static void
-malloc_only_one_block_when_enough_memory(void)
-{
+static void malloc_min_request_size(void) {
 	struct malloc_stats stats;
-
 	char *var = malloc(10);
-	char *var2 = malloc(15);
-
 	get_stats(&stats);
-	ASSERT_TRUE("[MALLOC - one block] amount of blocks should be 1",
-	            stats.blocks == 1);
-
+	ASSERT_TRUE("[MALLOC - min request size] requesting less than 64 should allocate 64", stats.requested_memory == 64 && stats.blocks == 1);
 	free(var);
-	free(var2);
 }
 //-------------------------------------------------
 // TESTS FREE
@@ -336,7 +344,6 @@ free_with_coalesce(void)
 	free(reg4);
 }
 
-
 static void
 fail_if_double_free(void)
 {
@@ -370,6 +377,13 @@ fail_if_invalid_free(void)
 	//             0 == 1);
 }
 
+static void free_one_region_block_should_be_unmapped(void) {
+	char *var = malloc(10);
+	struct malloc_stats stats;
+	free(var);
+	get_stats(&stats);
+	ASSERT_TRUE("[FREE - one region block] a block with a single region being freed should be unmapped", stats.blocks == 0);
+}
 
 int
 main(void)
@@ -392,7 +406,7 @@ main(void)
 	run_test(malloc_multiple_blocks);
 	run_test(malloc_only_one_block_when_enough_memory);
 	run_test(malloc_max_blocks_limit);
-
+	run_test(malloc_min_request_size);
 
 	// TESTS FREE
 	run_test(correct_amount_of_frees);
@@ -402,6 +416,7 @@ main(void)
 	run_test(free_with_coalesce);
 	run_test(fail_if_double_free);   // TODO - implement check
 	run_test(fail_if_invalid_free);  // TODO - implement check
+	run_test(free_one_region_block_should_be_unmapped);
 
 	return 0;
 }

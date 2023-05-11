@@ -350,5 +350,6 @@ unmap(struct block *block, size_t size)
 			large_blocks = block->next;
 	}
 
-	munmap(block, size);
+	if (munmap(block, size) == 0)
+		blocks_mapped--;
 }
