@@ -392,34 +392,34 @@ free_with_coalesce(void)
 static void
 fail_if_double_free(void)
 {
-	char *var = malloc(100);
+        char *var = malloc(100);
 
-	// Assert before free just to print test if failing until fix in free()
-	ASSERT_TRUE("[FREE - double] fail if double free requested", 0 == 1);
+        // Assert before free just to print test if failing until fix in free()
+        ASSERT_TRUE("[FREE - double] fail if double free requested", 0 == 1);
 
-	free(var);
-	free(var);
+        free(var);
+        free(var);
 
-	// TODO - immplement fail check
+        // TODO - immplement fail check
 
-	// ASSERT_TRUE("[FREE - double] fail if double free requested",
-	//             0==1);
+        // ASSERT_TRUE("[FREE - double] fail if double free requested",
+        //             0==1);
 }
 
 static void
 fail_if_invalid_free(void)
 {
-	char *str = "this is a non malloc requested space";
+        char *str = "this is a non malloc requested space";
 
-	// Assert before free just to print test if failing until fix in free()
-	ASSERT_TRUE("[FREE - invalid] fail if invalid  free requested", 0 == 1);
+        // Assert before free just to print test if failing until fix in free()
+        ASSERT_TRUE("[FREE - invalid] fail if invalid  free requested", 0 == 1);
 
-	free(str);
+        free(str);
 
-	// TODO - immplement fail check
+        // TODO - immplement fail check
 
-	// ASSERT_TRUE("[FREE - invalid] fail if invalid  free requested",
-	//             0 == 1);
+        // ASSERT_TRUE("[FREE - invalid] fail if invalid  free requested",
+        //             0 == 1);
 }
 */
 
@@ -687,8 +687,8 @@ main(void)
 	run_test(correct_amount_of_frees_if_free_null_pointer);
 	run_test(alloc_space_free);
 	run_test(free_with_coalesce);
-	//run_test(fail_if_double_free);   // TODO - implement check
-	//run_test(fail_if_invalid_free);  // TODO - implement check
+	// run_test(fail_if_double_free);   // TODO - implement check
+	// run_test(fail_if_invalid_free);  // TODO - implement check
 	run_test(free_one_region_block_should_be_unmapped);
 	// run_test(free_multiple_region_of_large_block_should_unmap_it);
 	run_test(free_allocs_of_different_size_should_unmap_blocks);

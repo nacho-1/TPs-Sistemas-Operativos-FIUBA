@@ -239,11 +239,12 @@ free(void *ptr)
 		return;
 
 	struct region *curr = PTR2REGION(ptr);
-	if (curr->free) // stdlib no define ningun error
+	if (curr->free)  // stdlib no define ningun error
 		return;
 
-	// stdlib define que free de un puntero no devuelto por la libreria (no fue devuelto por un malloc, realloc, etc)
-	// causa undefined-behaviour. Por ahora nuestro free es igual.
+	// stdlib define que free de un puntero no devuelto por la libreria (no
+	// fue devuelto por un malloc, realloc, etc) causa undefined-behaviour.
+	// Por ahora nuestro free es igual.
 
 	curr->free = true;
 
