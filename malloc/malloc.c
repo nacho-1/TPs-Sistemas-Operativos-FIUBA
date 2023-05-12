@@ -213,8 +213,10 @@ malloc(size_t size)
 	if (region == NULL) {  // Couldn't find in any block
 		region = grow_heap(size);
 
-		if (region == NULL)  // Couldn't create new block
+		if (region == NULL) {  // Couldn't create new block
+			errno = ENOMEM;
 			return NULL;
+		}
 	}
 
 	if (region->size >= size + sizeof(struct region) + MIN_SIZE) {
