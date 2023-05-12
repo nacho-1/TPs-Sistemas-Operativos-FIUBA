@@ -173,9 +173,7 @@ malloc(size_t size)
 		}
 	}
 
-	if (region->size >= size + sizeof(struct region) + MIN_SIZE) {
-		split(region, size);
-	}
+	split(region, size);
 
 	region->free = false;
 
@@ -239,17 +237,39 @@ realloc(void *ptr, size_t size)
 		return malloc(size);
 
 	struct region *curr = PTR2REGION(ptr);
+	struct region *new_reg;
+	void *new_ptr;
 
-	if (curr->size >= size + sizeof(struct region) + MIN_SIZE) { // fits size and can split
+	if (size < curr->size) {
 		split(curr, size);
 		return ptr;
-	} else if (curr->size >= size && curr->size < size + sizeof(struct region) + MIN_SIZE) {  // fits size but can't split
-		return ptr;
 	} else {
-		/*
-		 * Aca faltaria chequear si se puede coalisionar curr con sus vecinos
-		 * y ver si ahi entra size. Pero es mas complicado.
-		 */
+		size_t prev_next_free_space = 0;
+		if (curr->prev->free){
+			if (curr->size + curr->prev->size > size){
+				new_reg = merge(curr->prev);
+				new_ptr = REGION2PTR(new_reg);
+				memcpy(new_ptr, ptr, curr->size);
+				return new_ptr;
+			}
+			prev_next_free_space += curr->prev->size;
+		}
+		if (curr->next->free){
+			if (curr->size + curr->prev->size > size){
+				new_reg = merge(curr);
+				return REGION2PTR(new_reg);
+			}
+			prev_next_free_space += curr->next->size;
+		}
+
+		if(curr->size + prev_next_free_space >= size){
+			new_reg = merge(curr->prev);
+			new_reg = merge(new_reg);
+			new_ptr = REGION2PTR(new_reg);
+			memcpy(new_ptr, ptr, curr->size);
+			return new_ptr;
+		}
+
 		void *new_ptr = malloc(size);
 		if (new_ptr == NULL)
 			return NULL;
@@ -275,7 +295,8 @@ split(struct region *region, size_t size)
 	if (region == NULL)
 		return;
 
-	assert(region->size > size + sizeof(struct region));
+	if (region->size < size + sizeof(struct region) + MIN_SIZE)
+		return;
 
 	char *addr = ((char *) (region + 1)) + size;
 
