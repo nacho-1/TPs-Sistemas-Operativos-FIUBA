@@ -237,9 +237,11 @@ free(void *ptr)
 		return;
 
 	struct region *curr = PTR2REGION(ptr);
-	assert(!curr->free);  // TODO - replace this for error set
+	if (curr->free) // stdlib no define ningun error
+		return;
 
-	// TODO - check here if it is a region struct allocated by malloc
+	// stdlib define que free de un puntero no devuelto por la libreria (no fue devuelto por un malloc, realloc, etc)
+	// causa undefined-behaviour. Por ahora nuestro free es igual.
 
 	curr->free = true;
 
