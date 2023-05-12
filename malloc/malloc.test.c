@@ -656,6 +656,26 @@ realloc_doesnt_modify_when_fails(void)
 	            not_change && more_nums == NULL);
 }
 
+
+static void
+realloc_expect_reuse_actual_space(void)
+{
+	char *reg1 = malloc(SMALL_BLOCK_SIZE * 2 / 7);
+	char *reg2 = malloc(SMALL_BLOCK_SIZE * 2 / 7);
+
+	char *reg3 = realloc(reg2, SMALL_BLOCK_SIZE * 4 / 7);
+
+	struct malloc_stats stats;
+	get_stats(&stats);
+
+
+	ASSERT_TRUE("[realloc - reuse region] reuse actual region on realloc",
+	            stats.blocks == 1);
+
+	free(reg1);
+	free(reg3);
+}
+
 int
 main(void)
 {
@@ -704,6 +724,8 @@ main(void)
 	run_test(realloc_with_null_pointer_is_a_malloc);
 	run_test(realloc_with_zero_size_is_a_free);
 	run_test(realloc_doesnt_modify_when_fails);
+	run_test(realloc_expect_reuse_actual_space);
+
 
 	return 0;
 }
