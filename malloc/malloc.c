@@ -1,65 +1,15 @@
-#define _DEFAULT_SOURCE
-
-#include <assert.h>
-#include <stdbool.h>
-#include <errno.h>
-#include <sys/mman.h>
-#include <string.h>
-#include <stddef.h>
 #include "malloc.h"
 
-#define ALIGN4(s) (((((s) -1) >> 2) << 2) + 4)
-#define REGION2PTR(r) ((r) + 1)
-#define PTR2REGION(ptr) ((struct region *) (ptr) -1)
-#define REGION2BLOCK(r) ((struct block *) (r) -1)
-#define BLOCK2REGION(b) ((b) + 1)
-#define FIRST_FIT
+int amount_of_mallocs = 0;
+int amount_of_frees = 0;
+int requested_memory = 0;
 
-struct region {
-	bool free;
-	size_t size;
-	struct region *next;
-	struct region *prev;
-};
-
-struct block {
-	struct block *next;
-	struct block *prev;
-};
 
 size_t blocks_mapped = 0;
 struct block *small_blocks = NULL;
 struct block *medium_blocks = NULL;
 struct block *large_blocks = NULL;
 
-int amount_of_mallocs = 0;
-int amount_of_frees = 0;
-int requested_memory = 0;
-
-static size_t size_that_fits(size_t size);
-
-static void split(struct region *region, size_t size);
-
-/*
- * Merge region with its next region into one.
- */
-static struct region *merge(struct region *region);
-
-/*
- * Coalesce region with its adjacent ones.
- * Return a pointer to the region that contains
- * the parameter region.
- */
-static struct region *coalesce(struct region *region);
-
-static void unmap(struct block *block, size_t size);
-
-/*
- * Find free region in block that fits size,
- * where first is the first region of the block.
- * Return NULL if there's none.
- */
-static struct region *find_in_block(struct region *first, size_t size);
 
 static struct region *
 find_free_region(size_t size)
@@ -104,6 +54,11 @@ find_free_region(size_t size)
 	return NULL;  // couldn't find any free region for size in any block
 }
 
+/*
+ * Find free region in block that fits size,
+ * where first is the first region of the block.
+ * Return NULL if there's none.
+ */
 static struct region *
 find_in_block(struct region *first, size_t size)
 {
@@ -117,7 +72,6 @@ find_in_block(struct region *first, size_t size)
 	}
 #endif
 #ifdef BEST_FIT
-	// Your code here for "best fit"
 	struct region *best_region = NULL;
 	while (region != NULL) {
 		if (region->free && region->size >= size) {
@@ -324,6 +278,9 @@ split(struct region *region, size_t size)
 	region->next = new_region;
 }
 
+/*
+ * Merge region with its next region into one.
+ */
 struct region *
 merge(struct region *region)
 {
@@ -341,6 +298,12 @@ merge(struct region *region)
 	return region;
 }
 
+
+/*
+ * Coalesce region with its adjacent ones.
+ * Return a pointer to the region that contains
+ * the parameter region.
+ */
 struct region *
 coalesce(struct region *region)
 {
