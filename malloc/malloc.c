@@ -230,20 +230,34 @@ calloc(size_t nmemb, size_t size)
 void *
 realloc(void *ptr, size_t size)
 {
-	if (size == 0 && ptr != NULL) {
+	if (size == 0) {
 		free(ptr);
-		return NULL;
-	}
-	void *new_ptr = malloc(size);
-
-	if (ptr != NULL && new_ptr != NULL) {
-		struct region *current = PTR2REGION(ptr);
-		size_t size_to_cpy = current->size < size ? current->size : size;
-		memcpy(new_ptr, ptr, size_to_cpy);
-		free(ptr);
+		return ptr;
 	}
 
-	return new_ptr;
+	if (ptr == NULL)
+		return malloc(size);
+
+	struct region *curr = PTR2REGION(ptr);
+
+	if (curr->size >= size + sizeof(struct region) + MIN_SIZE) { // fits size and can split
+		split(curr, size);
+		return ptr;
+	} else if (curr->size >= size && curr->size < size + sizeof(struct region) + MIN_SIZE) {  // fits size but can't split
+		return ptr;
+	} else {
+		/*
+		 * Aca faltaria chequear si se puede coalisionar curr con sus vecinos
+		 * y ver si ahi entra size. Pero es mas complicado.
+		 */
+		void *new_ptr = malloc(size);
+		if (new_ptr == NULL)
+			return NULL;
+
+		memcpy(new_ptr, ptr, curr->size);
+		free(ptr);
+		return new_ptr;
+	}
 }
 
 void
