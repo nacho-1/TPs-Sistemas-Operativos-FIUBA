@@ -127,6 +127,7 @@ grow_heap(size_t size)
 
 	// Initialize the first region of the block.
 	struct region *region = (struct region *) BLOCK2REGION(new_block);
+	region->magic_number = MAGIC_NUMBER;
 	region->free = true;
 	region->size = size - sizeof(struct block) - sizeof(struct region);
 	region->next = NULL;
@@ -191,6 +192,10 @@ free(void *ptr)
 		return;
 
 	struct region *curr = PTR2REGION(ptr);
+
+	if(curr->magic_number != MAGIC_NUMBER)
+		return;
+
 	if (curr->free)  // stdlib no define ningun error
 		return;
 
@@ -302,6 +307,7 @@ split(struct region *region, size_t size)
 
 	struct region *new_region = (struct region *) addr;
 
+	new_region->magic_number = MAGIC_NUMBER;
 	new_region->free = true;
 	new_region->size = region->size - size - sizeof(struct region);
 	new_region->next = region->next;

@@ -1,6 +1,7 @@
 #ifndef _MALLOC_H_
 #define _MALLOC_H_
 
+#define MAGIC_NUMBER 377060
 #define MAX_BLOCKS 32  // maximun ammount of blocks this library will support
 #define MIN_SIZE 64    // minimun size of a region
 #define SMALL_BLOCK_SIZE 16384
@@ -29,6 +30,7 @@ struct malloc_stats {
 };
 
 struct region {
+	int magic_number;
 	bool free;
 	size_t size;
 	struct region *next;

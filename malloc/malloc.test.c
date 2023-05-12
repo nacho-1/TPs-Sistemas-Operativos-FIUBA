@@ -388,6 +388,21 @@ free_with_coalesce(void)
 	free(reg4);
 }
 
+
+static void
+free_invalid_region(void)
+{
+	struct malloc_stats stats;
+	char *str = "hello";
+
+	free(str);
+
+	get_stats(&stats);
+	ASSERT_TRUE("[FREE - invalid] amount of frees should be 0",
+	            stats.frees == 0);
+
+}
+
 /*
 static void
 fail_if_double_free(void)
@@ -726,6 +741,7 @@ main(void)
 	run_test(correct_amount_of_frees_if_free_null_pointer);
 	run_test(alloc_space_free);
 	run_test(free_with_coalesce);
+	run_test(free_invalid_region);
 	// run_test(fail_if_double_free);   // TODO - implement check
 	// run_test(fail_if_invalid_free);  // TODO - implement check
 	run_test(free_one_region_block_should_be_unmapped);
