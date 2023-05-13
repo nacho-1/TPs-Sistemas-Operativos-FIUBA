@@ -1,3 +1,14 @@
-# malloc
+# Malloc
 
-Lugar para respuestas en prosa y documentación del TP.
+
+# Find free region
+## First fit
+
+## Best fit
+
+# Free 
+
+# Realloc
+
+# Calloc
+
