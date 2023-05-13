@@ -212,13 +212,13 @@ malloc_multiple_blocks(void)
 {
 	struct malloc_stats stats;
 
-	char *var = malloc(16000);
-	char *var2 = malloc(16000);
+	char *var = malloc(SMALL_BLOCK_SIZE / 2);
+	char *var2 = malloc(MEDIUM_BLOCK_SIZE / 2);
 
 	get_stats(&stats);
 	ASSERT_TRUE("[MALLOC - multiple blocks] amount of blocks should be 2",
 	            stats.blocks == 2);
-
+	printfmt("blocks: %d\n", stats.blocks);
 	free(var);
 	free(var2);
 }

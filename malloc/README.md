@@ -15,7 +15,10 @@ $ make
 ## Ejectar pruebas
 
 ```bash
-$ make test
+$ make test -B -e USE_BF=true
+```
+```bash
+$ make test -B -e USE_FF=true
 ```
 
 ## Linter
