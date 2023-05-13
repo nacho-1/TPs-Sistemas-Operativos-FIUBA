@@ -193,7 +193,7 @@ free(void *ptr)
 
 	struct region *curr = PTR2REGION(ptr);
 
-	if(curr->magic_number != MAGIC_NUMBER)
+	if (curr->magic_number != MAGIC_NUMBER)
 		return;
 
 	if (curr->free)  // stdlib no define ningun error
@@ -215,8 +215,6 @@ free(void *ptr)
 		                    sizeof(struct region);
 		unmap((struct block *) REGION2BLOCK(curr), block_size);
 	}
-
-
 }
 
 void *
@@ -252,8 +250,8 @@ realloc(void *ptr, size_t size)
 		return ptr;
 	} else {
 		size_t prev_next_free_space = 0;
-		if (curr->prev->free){
-			if (curr->size + curr->prev->size > size){
+		if (curr->prev->free) {
+			if (curr->size + curr->prev->size > size) {
 				new_reg = merge(curr->prev);
 				new_ptr = REGION2PTR(new_reg);
 				memcpy(new_ptr, ptr, curr->size);
@@ -261,15 +259,15 @@ realloc(void *ptr, size_t size)
 			}
 			prev_next_free_space += curr->prev->size;
 		}
-		if (curr->next->free){
-			if (curr->size + curr->prev->size > size){
+		if (curr->next->free) {
+			if (curr->size + curr->prev->size > size) {
 				new_reg = merge(curr);
 				return REGION2PTR(new_reg);
 			}
 			prev_next_free_space += curr->next->size;
 		}
 
-		if(curr->size + prev_next_free_space >= size){
+		if (curr->size + prev_next_free_space >= size) {
 			new_reg = merge(curr->prev);
 			new_reg = merge(new_reg);
 			new_ptr = REGION2PTR(new_reg);

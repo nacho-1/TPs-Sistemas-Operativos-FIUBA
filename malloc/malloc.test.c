@@ -400,7 +400,6 @@ fail_if_invalid_free(void)
 	get_stats(&stats);
 	ASSERT_TRUE("[FREE - invalid] amount of frees should be 0",
 	            stats.frees == 0);
-
 }
 
 
@@ -408,7 +407,7 @@ static void
 fail_if_double_free(void)
 {
 	struct malloc_stats stats;
-    char *var1 = malloc(100);
+	char *var1 = malloc(100);
 	char *var2 = malloc(100);
 
 	free(var2);
@@ -416,7 +415,7 @@ fail_if_double_free(void)
 
 	get_stats(&stats);
 	ASSERT_TRUE("[FREE - double] fail if double free requested",
-                    stats.frees == 1);
+	            stats.frees == 1);
 }
 
 
