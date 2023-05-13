@@ -245,44 +245,47 @@ realloc(void *ptr, size_t size)
 	struct region *new_reg;
 	void *new_ptr;
 
-	if (size < curr->size) {
+	if (size <= curr->size) {
 		split(curr, size);
 		return ptr;
-	} else {
-		size_t prev_next_free_space = 0;
-		if (curr->prev->free) {
-			if (curr->size + curr->prev->size > size) {
-				new_reg = merge(curr->prev);
-				new_ptr = REGION2PTR(new_reg);
-				memcpy(new_ptr, ptr, curr->size);
-				return new_ptr;
-			}
-			prev_next_free_space += curr->prev->size;
-		}
-		if (curr->next->free) {
-			if (curr->size + curr->prev->size > size) {
-				new_reg = merge(curr);
-				return REGION2PTR(new_reg);
-			}
-			prev_next_free_space += curr->next->size;
-		}
+	}
 
-		if (curr->size + prev_next_free_space >= size) {
+	size_t coalition_size = curr->size;
+	if (curr->next != NULL && curr->next->free) {
+		if (curr->size + curr->prev->size + sizeof(struct region) >= size) {
+			new_reg = merge(curr);
+			split(new_reg, size);
+			return REGION2PTR(new_reg);
+		}
+		coalition_size += curr->next->size + sizeof(struct region);
+	}
+	if (curr->prev != NULL && curr->prev->free) {
+		if (curr->size + curr->prev->size + sizeof(struct region) >= size) {
 			new_reg = merge(curr->prev);
-			new_reg = merge(new_reg);
+			split(new_reg, size);
 			new_ptr = REGION2PTR(new_reg);
 			memcpy(new_ptr, ptr, curr->size);
 			return new_ptr;
 		}
-
-		new_ptr = malloc(size);
-		if (new_ptr == NULL)
-			return NULL;
-
+		coalition_size += curr->prev->size + sizeof(struct region);
+	}
+	if (coalition_size >= size) {
+		new_reg = merge(curr->prev);
+		new_reg = merge(new_reg);
+		split(new_reg, size);
+		new_ptr = REGION2PTR(new_reg);
 		memcpy(new_ptr, ptr, curr->size);
-		free(ptr);
 		return new_ptr;
 	}
+
+	// Couldn't reutilize region
+	new_ptr = malloc(size);
+	if (new_ptr == NULL)
+		return NULL;
+
+	memcpy(new_ptr, ptr, curr->size);
+	free(ptr);
+	return new_ptr;
 }
 
 void
