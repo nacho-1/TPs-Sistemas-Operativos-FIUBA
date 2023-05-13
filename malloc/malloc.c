@@ -275,7 +275,7 @@ realloc(void *ptr, size_t size)
 			return new_ptr;
 		}
 
-		void *new_ptr = malloc(size);
+		new_ptr = malloc(size);
 		if (new_ptr == NULL)
 			return NULL;
 
