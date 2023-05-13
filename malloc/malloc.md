@@ -87,3 +87,4 @@ forma se recupera la memoria allocada anteriormente por `malloc`.
 
 # Calloc
 
+La función calloc llama a la función `malloc` y luego rellena ese espacio devuelto con ceros usando la función `memset`.
