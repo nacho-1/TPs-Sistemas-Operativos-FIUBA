@@ -215,6 +215,8 @@ free(void *ptr)
 		                    sizeof(struct region);
 		unmap((struct block *) REGION2BLOCK(curr), block_size);
 	}
+
+
 }
 
 void *
