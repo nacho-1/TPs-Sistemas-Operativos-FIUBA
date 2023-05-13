@@ -83,6 +83,12 @@ forma se recupera la memoria allocada anteriormente por `malloc`.
 
 # Realloc
 
+La función `realloc(ptr, size)` funciona como un free en el caso en el que se le pase como size 0, y funciona como malloc en el caso en el que el ptr sea null.
+
+Además, en el caso en el que la región a realocar tenga vecinos que están libres aprovecha ese espacio mergeando las regiones. 
+
+En el caso en el que mergeando las regiones contiguas (si estuviesen libres) siga sin ser suficiente el espacio disponible, se realiza un malloc nuevo. 
+
 ----------------
 
 # Calloc
