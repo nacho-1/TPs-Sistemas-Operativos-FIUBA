@@ -9,14 +9,14 @@
 
 .globl context_switch;
 context_switch:
-	popl %esp // point esp to the beginning of the trapframe
-	popal
-	popl %es
+	popl %esp; // point esp to the beginning of the trapframe
+	popal;
+	popl %es;
 	// add $2, %esp // skip padding1
-	popl %ds
+	popl %ds;
 	// add $2, %esp // skip padding2
-	add $4, %esp // skip trapno
-	add $4, %esp // skip err
-	iret
+	add $4, %esp; // skip trapno
+	add $4, %esp; // skip err
+	iret;
 spin:
 	jmp spin
