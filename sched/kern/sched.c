@@ -6,6 +6,7 @@
 #include <kern/monitor.h>
 
 void sched_halt(void);
+void get_next_runnable_process(int first, int last);
 
 // Choose a user environment to run and run it.
 void
@@ -29,13 +30,41 @@ sched_yield(void)
 	// below to halt the cpu.
 
 	// Your code here
-	// Wihtout scheduler, keep runing the last environment while it exists
-	if (curenv) {
-		env_run(curenv);
+	// Without scheduler, keep running the last environment while it exists
+	/*
+	        if (curenv) {
+	                env_run(curenv);
+	        }
+	*/
+	int pos = 0;
+	idle = curenv;
+
+	if (idle != NULL) {
+		pos = ENVX(idle->env_id) + 1;
+	}
+
+	// recorrer el arreglo de manera circular
+	get_next_runnable_process(pos, NENV);
+	get_next_runnable_process(0, pos);
+
+	// si no hay otro proceso runnable sigo corriendo el actual
+	if (idle && idle->env_status == ENV_RUNNING) {
+		env_run(idle);
 	}
 
 	// sched_halt never returns
 	sched_halt();
+}
+
+void
+get_next_runnable_process(int first, int last)
+{
+	int pos = first;
+	for (pos; pos < last; pos++) {
+		if (envs[pos].env_status == ENV_RUNNABLE) {
+			env_run(&envs[pos]);
+		}
+	}
 }
 
 // Halt this CPU when there is nothing to do. Wait until the
