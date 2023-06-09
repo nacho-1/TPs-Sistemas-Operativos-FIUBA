@@ -3,3 +3,8 @@
 
 #IDE files
 .idea/
+
+#Vagrant files
+*Vagrant*
+*vagrant*
+*ubuntu*.log
