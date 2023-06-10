@@ -19,6 +19,8 @@ struct Env *envs = NULL;           // All environments
 static struct Env *env_free_list;  // Free environment list
                                    // (linked by Env->env_link)
 
+int total_tickets = 0;
+
 #define ENVGENSHIFT 12  // >= LOGNENV
 
 // Global descriptor table.
@@ -257,6 +259,12 @@ env_alloc(struct Env **newenv_store, envid_t parent_id)
 	// Also clear the IPC receiving flag.
 	e->env_ipc_recving = 0;
 
+	// Assign tickets
+	// TODO - Define how priority and tickets are assign to every process
+	e->tickets = total_tickets + 50;
+	total_tickets += e->tickets;
+
+
 	// commit the allocation
 	env_free_list = e->env_link;
 	*newenv_store = e;
@@ -467,7 +475,7 @@ env_destroy(struct Env *e)
 		e->env_status = ENV_DYING;
 		return;
 	}
-
+	total_tickets -= e->tickets;
 	env_free(e);
 
 	if (curenv == e) {

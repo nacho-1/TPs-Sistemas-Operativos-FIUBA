@@ -15,4 +15,5 @@
 /sol?/
 /myapi.key
 /.suf
+/.vscode/*
 __pycache__/

@@ -5,8 +5,14 @@
 #include <kern/pmap.h>
 #include <kern/monitor.h>
 
+extern int total_tickets;
+int prev_random = 1234; // seed
+
 void sched_halt(void);
 void get_next_runnable_process(int first, int last);
+int generate_pseudorandom_value();
+
+
 
 // Choose a user environment to run and run it.
 void
@@ -14,6 +20,7 @@ sched_yield(void)
 {
 	struct Env *idle;
 
+#ifdef SCHED_ROUND_ROBIN
 	// Implement simple round-robin scheduling.
 	//
 	// Search through 'envs' for an ENV_RUNNABLE environment in
@@ -51,6 +58,25 @@ sched_yield(void)
 	if (idle && idle->env_status == ENV_RUNNING) {
 		env_run(idle);
 	}
+#elif SCHED_PROPORTIONAL_SHARE
+	// counter: used to track if we’ve found the winner yet
+	int counter = 0;
+
+	// winner: use some call to a random number generator to
+	// get a value, between 0 and the total # of tickets
+	int winner = generate_pseudorandom_value();
+
+	for (int i = 0; i < NENV; i++) {
+		if (envs[i].env_status == ENV_RUNNABLE) {
+			counter += envs[i].tickets;
+			if (counter >= winner){
+				env_run(&envs[i]);
+				break; // found the winner
+			}
+		}
+	}
+
+#endif
 
 	// sched_halt never returns
 	sched_halt();
@@ -115,4 +141,18 @@ sched_halt(void)
 	             "jmp 1b\n"
 	             :
 	             : "a"(thiscpu->cpu_ts.ts_esp0));
+}
+
+int generate_pseudorandom_value(){
+
+	unsigned long long int a = 4294967296;
+    int c = 1013904223;
+	int m = 1664525;
+
+	unsigned int random = (a * prev_random + c ) % m;
+	int rand_tickets = random * total_tickets / m ;
+	int percent = random * 100 / m ;
+	prev_random = random;
+
+	return rand_tickets;
 }
