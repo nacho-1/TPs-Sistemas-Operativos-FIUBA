@@ -11,14 +11,17 @@ int prev_random = 1234; // seed
 void sched_halt(void);
 void get_next_runnable_process(int first, int last);
 int generate_pseudorandom_value();
+void get_stats();
 
-
+// stats
+int sched_calls = 0;
 
 // Choose a user environment to run and run it.
 void
 sched_yield(void)
 {
 	struct Env *idle;
+	sched_calls++;
 
 #ifdef SCHED_ROUND_ROBIN
 	// Implement simple round-robin scheduling.
@@ -111,6 +114,7 @@ sched_halt(void)
 	}
 	if (i == NENV) {
 		cprintf("No runnable environments in the system!\n");
+		get_stats();
 		while (1)
 			monitor(NULL);
 	}
@@ -155,4 +159,22 @@ int generate_pseudorandom_value(){
 	prev_random = random;
 
 	return rand_tickets;
+}
+
+void get_stats() {
+	cprintf("----- Scheduler stats -----\n");
+
+	cprintf("Historial de procesos ejecutados\n");
+	for (int i = 0; i < NENV; i++) {
+		if (envs[i].env_runs == 0) continue;
+		cprintf("- %d \n", envs[i].env_id);
+	}
+	cprintf("\n");
+	cprintf("Cantidad de ejecuciones por proceso\n");
+	for (int j = 0; j < NENV; j++) {
+		if (envs[j].env_runs == 0) continue;
+		cprintf("- %d: %d veces\n", envs[j].env_id, envs[j].env_runs);
+	}
+	cprintf("\n");
+	cprintf("Cantidad de llamadas al scheduler: %d\n", sched_calls);
 }
