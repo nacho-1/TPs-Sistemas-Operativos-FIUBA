@@ -102,6 +102,23 @@ sys_getenvid(void)
 	return curenv->env_id;
 }
 
+
+// Syscall used to get process priority
+// TODO: now it just return the tickets assigned to the process
+static int
+sys_getpriority(void)
+{
+	return curenv->tickets;
+}
+
+// Syscall used to set process priority
+// TODO: now it just set the tickets assigned to the process
+static void
+sys_setpriority(int priority)
+{
+	curenv->tickets = priority;
+}
+
 // Destroy a given environment (possibly the currently running environment).
 //
 // Returns 0 on success, < 0 on error.  Errors are:
@@ -429,6 +446,7 @@ sys_ipc_recv(void *dstva)
 	return 0;
 }
 
+
 // Dispatches to the correct kernel function, passing the arguments.
 int32_t
 syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, uint32_t a5)
@@ -442,6 +460,10 @@ syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, 
 		return 0;
 	case SYS_getenvid:
 		return sys_getenvid();
+	case SYS_getpriority:
+		return sys_getpriority();
+	case SYS_setpriority:
+		sys_setpriority(a1); // no return
 	case SYS_env_destroy:
 		return sys_env_destroy(a1);
 	case SYS_cgetc:
