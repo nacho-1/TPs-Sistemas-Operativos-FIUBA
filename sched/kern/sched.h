@@ -9,4 +9,8 @@
 // This function does not return.
 void sched_yield(void) __attribute__((noreturn));
 
+void reduce_current_env_prio(void);
+
+void sched_boost(void);
+
 #endif  // !JOS_KERN_SCHED_H

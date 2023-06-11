@@ -178,3 +178,26 @@ void get_stats() {
 	cprintf("\n");
 	cprintf("Cantidad de llamadas al scheduler: %d\n", sched_calls);
 }
+
+void reduce_current_env_prio(void)
+{
+	if (curenv->tickets > 10) {
+		total_tickets -= 10;
+		curenv->tickets -= 10;
+	} else {
+		total_tickets -= curenv->tickets - 1;
+		curenv->tickets = 1;
+	}
+}
+
+void sched_boost(void)
+{
+	total_tickets = 0;
+	for (int i = 0; i < NENV; i++) {
+		if (envs[i].env_status == ENV_RUNNABLE ||
+		    envs[i].env_status == ENV_RUNNING) { // otros estados?
+			envs[i].tickets = 100;
+			total_tickets += 100;
+		}
+	}
+}

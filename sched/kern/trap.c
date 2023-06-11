@@ -28,6 +28,9 @@ static struct Trapframe *last_tf;
 struct Gatedesc idt[256] = { { 0 } };
 struct Pseudodesc idt_pd = { sizeof(idt) - 1, (uint32_t) idt };
 
+#define INTS2BOOST 20
+static unsigned timer_int_counter = 0;
+extern int total_tickets;
 
 static const char *
 trapname(int trapno)
@@ -227,6 +230,12 @@ trap_dispatch(struct Trapframe *tf)
 	switch (tf->tf_trapno - IRQ_OFFSET) {
 	case IRQ_TIMER:
 		lapic_eoi();
+		reduce_current_env_prio();
+		timer_int_counter++;
+		if (timer_int_counter == INTS2BOOST) {
+			timer_int_counter = 0;
+			sched_boost();
+		}
 		sched_yield();
 		return;
 	}
