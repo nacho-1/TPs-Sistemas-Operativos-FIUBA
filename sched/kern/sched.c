@@ -70,7 +70,7 @@ sched_yield(void)
 	int winner = generate_pseudorandom_value();
 
 	for (int i = 0; i < NENV; i++) {
-		if (envs != NULL && envs[i].env_status == ENV_RUNNABLE) {
+		if (envs[i].env_status == ENV_RUNNABLE) {
 			idle = &envs[i];
 			counter += envs[i].tickets;
 			if (counter >= winner) {
@@ -78,7 +78,9 @@ sched_yield(void)
 			}
 		}
 	}
-	env_run(idle);
+	if (idle) {
+		env_run(idle);
+	}
 
 #endif
 
