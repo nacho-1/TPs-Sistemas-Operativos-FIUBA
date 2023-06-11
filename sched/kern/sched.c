@@ -64,20 +64,22 @@ sched_yield(void)
 #elif SCHED_PROPORTIONAL_SHARE
 	// counter: used to track if we’ve found the winner yet
 	int counter = 0;
-
+	idle = curenv;
 	// winner: use some call to a random number generator to
 	// get a value, between 0 and the total # of tickets
 	int winner = generate_pseudorandom_value();
 
 	for (int i = 0; i < NENV; i++) {
-		if (envs[i].env_status == ENV_RUNNABLE) {
+		if (envs != NULL && envs[i].env_status == ENV_RUNNABLE) {
+			idle = &envs[i];
 			counter += envs[i].tickets;
 			if (counter >= winner){
-				env_run(&envs[i]);
+
 				break; // found the winner
 			}
 		}
 	}
+	env_run(idle);
 
 #endif
 
