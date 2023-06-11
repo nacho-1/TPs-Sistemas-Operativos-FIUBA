@@ -69,8 +69,7 @@ i386_init(void)
 #else
 	// Touch all you want.
 	ENV_CREATE(user_hello, ENV_TYPE_USER);
-	ENV_CREATE(user_hello, ENV_TYPE_USER);
-	ENV_CREATE(user_myfirstprogram, ENV_TYPE_USER);
+	ENV_CREATE(user_stresssched, ENV_TYPE_USER);
 #endif  // TEST*
 
 	// Eliminar esta llamada una vez completada la parte 1
