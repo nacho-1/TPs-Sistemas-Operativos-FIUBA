@@ -12,6 +12,7 @@
 #include <kern/console.h>
 #include <kern/sched.h>
 
+extern int total_tickets;
 
 static int
 check_perm(int perm, pte_t *pte)
@@ -104,19 +105,29 @@ sys_getenvid(void)
 
 
 // Syscall used to get process priority
-// TODO: now it just return the tickets assigned to the process
+// Returns the number of tickets assigned to the process
+// A bigger number of tickets indicate more priority
 static int
 sys_getpriority(void)
 {
 	return curenv->tickets;
 }
 
-// Syscall used to set process priority
-// TODO: now it just set the tickets assigned to the process
+// Syscall used to reduce process priority
+// The argument set the relative percent of the total tickets that
+// wants to be reduced.
 static void
-sys_setpriority(int priority)
+sys_reduce_priority(int relative_percent)
 {
-	curenv->tickets = priority;
+	int new_ticket_number = curenv->tickets * relative_percent / 100;
+
+	if (new_ticket_number > 0) {
+		total_tickets 	-= new_ticket_number;
+		curenv->tickets -= new_ticket_number;
+	} else {
+		total_tickets 	-= curenv->tickets - 1;
+		curenv->tickets = 1;
+	}
 }
 
 // Destroy a given environment (possibly the currently running environment).
@@ -462,8 +473,8 @@ syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, 
 		return sys_getenvid();
 	case SYS_getpriority:
 		return sys_getpriority();
-	case SYS_setpriority:
-		sys_setpriority(a1); // no return
+	case SYS_reduce_priority:
+		sys_reduce_priority(a1); // no return
 	case SYS_env_destroy:
 		return sys_env_destroy(a1);
 	case SYS_cgetc:

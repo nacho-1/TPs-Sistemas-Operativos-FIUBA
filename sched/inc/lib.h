@@ -43,7 +43,7 @@ void sys_cputs(const char *string, size_t len);
 int sys_cgetc(void);
 envid_t sys_getenvid(void);
 int sys_getpriority(void);
-void sys_setpriority(int);
+void sys_reduce_priority(int);
 int sys_env_destroy(envid_t);
 void sys_yield(void);
 static envid_t sys_exofork(void);
