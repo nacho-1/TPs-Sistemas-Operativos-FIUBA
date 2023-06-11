@@ -190,6 +190,9 @@ get_stats()
 void
 reduce_current_env_prio(void)
 {
+	if (curenv == NULL)
+		return;
+	
 	if (curenv->tickets > 10) {
 		total_tickets -= 10;
 		curenv->tickets -= 10;
