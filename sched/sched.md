@@ -119,3 +119,9 @@ Se puede ver como se pasan a restaurar todos los valores de los registros segun 
 del proceso. Luego la instruccion `iret` hará los ultimos cambios, en particular notar `eip` que es el instruction pointer
 y `cs` que contiene la informacion de en que nivel de privilegio se está corriendo.
 
+## Referencias
+
+* Remzi H. Arpaci-Dusseau, Andrea C. Arpaci-Dusseau, Operating Systems: Three Easy Pieces (v0.91), Arpaci-Dusseau Books (2015)
+* https://github.com/Babtsov/jos
+* https://github.com/GEscandar/Sistemas-Operativos-FIUBA
+
