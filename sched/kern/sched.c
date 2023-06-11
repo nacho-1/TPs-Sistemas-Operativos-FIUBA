@@ -20,7 +20,7 @@ int sched_calls = 0;
 void
 sched_yield(void)
 {
-	struct Env *idle;
+	struct Env *idle = NULL;
 	sched_calls++;
 
 #ifdef SCHED_ROUND_ROBIN
@@ -64,7 +64,12 @@ sched_yield(void)
 #elif SCHED_PROPORTIONAL_SHARE
 	// counter: used to track if we’ve found the winner yet
 	int counter = 0;
-	idle = curenv;
+	if (curenv) {
+		if (curenv->env_status == ENV_RUNNING) {
+			idle = curenv;
+		}
+	}
+
 	// winner: use some call to a random number generator to
 	// get a value, between 0 and the total # of tickets
 	int winner = generate_pseudorandom_value();
