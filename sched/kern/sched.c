@@ -6,7 +6,7 @@
 #include <kern/monitor.h>
 
 extern int total_tickets;
-int prev_random = 1234; // seed
+int prev_random = 1234;  // seed
 
 void sched_halt(void);
 void get_next_runnable_process(int first, int last);
@@ -73,9 +73,8 @@ sched_yield(void)
 		if (envs != NULL && envs[i].env_status == ENV_RUNNABLE) {
 			idle = &envs[i];
 			counter += envs[i].tickets;
-			if (counter >= winner){
-
-				break; // found the winner
+			if (counter >= winner) {
+				break;  // found the winner
 			}
 		}
 	}
@@ -149,39 +148,45 @@ sched_halt(void)
 	             : "a"(thiscpu->cpu_ts.ts_esp0));
 }
 
-int generate_pseudorandom_value(){
-
+int
+generate_pseudorandom_value()
+{
 	unsigned long long int a = 4294967296;
-    int c = 1013904223;
+	int c = 1013904223;
 	int m = 1664525;
 
-	unsigned int random = (a * prev_random + c ) % m;
-	int rand_tickets = random * total_tickets / m ;
-	int percent = random * 100 / m ;
+	unsigned int random = (a * prev_random + c) % m;
+	int rand_tickets = random * total_tickets / m;
+	int percent = random * 100 / m;
 	prev_random = random;
 
 	return rand_tickets;
 }
 
-void get_stats() {
+void
+get_stats()
+{
 	cprintf("----- Scheduler stats -----\n");
 
 	cprintf("Historial de procesos ejecutados\n");
 	for (int i = 0; i < NENV; i++) {
-		if (envs[i].env_runs == 0) continue;
+		if (envs[i].env_runs == 0)
+			continue;
 		cprintf("- %d \n", envs[i].env_id);
 	}
 	cprintf("\n");
 	cprintf("Cantidad de ejecuciones por proceso\n");
 	for (int j = 0; j < NENV; j++) {
-		if (envs[j].env_runs == 0) continue;
+		if (envs[j].env_runs == 0)
+			continue;
 		cprintf("- %d: %d veces\n", envs[j].env_id, envs[j].env_runs);
 	}
 	cprintf("\n");
 	cprintf("Cantidad de llamadas al scheduler: %d\n", sched_calls);
 }
 
-void reduce_current_env_prio(void)
+void
+reduce_current_env_prio(void)
 {
 	if (curenv->tickets > 10) {
 		total_tickets -= 10;
@@ -192,12 +197,13 @@ void reduce_current_env_prio(void)
 	}
 }
 
-void sched_boost(void)
+void
+sched_boost(void)
 {
 	total_tickets = 0;
 	for (int i = 0; i < NENV; i++) {
 		if (envs[i].env_status == ENV_RUNNABLE ||
-		    envs[i].env_status == ENV_RUNNING) { // otros estados?
+		    envs[i].env_status == ENV_RUNNING) {  // otros estados?
 			envs[i].tickets = 100;
 			total_tickets += 100;
 		}
