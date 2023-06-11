@@ -46,6 +46,7 @@ KERN_SRCFILES := $(wildcard $(KERN_SRCFILES))
 # Binary files for LAB3
 KERN_BINFILES :=	user/hello \
 			user/myfirstprogram \
+			user/update_priority \
 			user/buggyhello \
 			user/buggyhello2 \
 			user/evilhello \

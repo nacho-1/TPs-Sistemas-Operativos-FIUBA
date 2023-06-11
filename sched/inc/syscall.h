@@ -5,6 +5,8 @@
 enum { SYS_cputs = 0,
        SYS_cgetc,
        SYS_getenvid,
+       SYS_getpriority,
+       SYS_setpriority,
        SYS_env_destroy,
        SYS_page_alloc,
        SYS_page_map,

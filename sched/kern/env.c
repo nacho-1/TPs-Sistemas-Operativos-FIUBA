@@ -259,9 +259,8 @@ env_alloc(struct Env **newenv_store, envid_t parent_id)
 	// Also clear the IPC receiving flag.
 	e->env_ipc_recving = 0;
 
-	// Assign tickets
-	// TODO - Define how priority and tickets are assign to every process
-	e->tickets = total_tickets + 50;
+	// New process starts with 100 tickets
+	e->tickets = 100;
 	total_tickets += e->tickets;
 
 
