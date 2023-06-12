@@ -122,10 +122,10 @@ sys_reduce_priority(int relative_percent)
 	int new_ticket_number = curenv->tickets * relative_percent / 100;
 
 	if (new_ticket_number > 0) {
-		total_tickets 	-= new_ticket_number;
+		total_tickets -= new_ticket_number;
 		curenv->tickets -= new_ticket_number;
 	} else {
-		total_tickets 	-= curenv->tickets - 1;
+		total_tickets -= curenv->tickets - 1;
 		curenv->tickets = 1;
 	}
 }
@@ -474,7 +474,7 @@ syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, 
 	case SYS_getpriority:
 		return sys_getpriority();
 	case SYS_reduce_priority:
-		sys_reduce_priority(a1); // no return
+		sys_reduce_priority(a1);  // no return
 	case SYS_env_destroy:
 		return sys_env_destroy(a1);
 	case SYS_cgetc:

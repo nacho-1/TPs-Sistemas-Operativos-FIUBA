@@ -88,3 +88,9 @@ kern/console.h
 kern/sched.h
 kern/picirq.h
 kern/kclock.h
+inc/assert.h
+inc/types.h
+user/myfirstprogram.c
+user/program1.c
+user/simple_program.c
+user/update_priority.c
