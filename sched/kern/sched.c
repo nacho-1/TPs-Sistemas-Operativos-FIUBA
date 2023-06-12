@@ -15,6 +15,7 @@ void get_stats();
 
 // stats
 int sched_calls = 0;
+int boost_calls = 0;
 
 // Choose a user environment to run and run it.
 void
@@ -189,6 +190,7 @@ get_stats()
 		cprintf("- %d: %d veces\n", envs[j].env_id, envs[j].env_runs);
 	}
 	cprintf("\n");
+	cprintf("Cantidad de boosts de prioridades: %d\n", boost_calls);
 	cprintf("Cantidad de llamadas al scheduler: %d\n", sched_calls);
 }
 
@@ -211,6 +213,7 @@ reduce_current_env_prio(void)
 void
 sched_boost(void)
 {
+	boost_calls++;
 	total_tickets = 0;
 	for (int i = 0; i < NENV; i++) {
 		if (envs[i].env_status == ENV_RUNNABLE ||
