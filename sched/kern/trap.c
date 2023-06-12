@@ -29,7 +29,7 @@ struct Gatedesc idt[256] = { { 0 } };
 struct Pseudodesc idt_pd = { sizeof(idt) - 1, (uint32_t) idt };
 
 #ifdef SCHED_PROPORTIONAL_SHARE
-#define INTS2BOOST 20
+#define INTS2BOOST 10
 static unsigned timer_int_counter = 0;
 #endif
 
