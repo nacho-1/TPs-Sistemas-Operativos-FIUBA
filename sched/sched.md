@@ -125,3 +125,116 @@ y `cs` que contiene la informacion de en que nivel de privilegio se está corrie
 * https://github.com/Babtsov/jos
 * https://github.com/GEscandar/Sistemas-Operativos-FIUBA
 
+## Parte 3
+### Scheduler en general
+
+Nuestro scheduler funciona como una lotería y asigna **tickets** a cada proceso.
+Tambien mantiene un conteo de todos los tickets asignados.
+
+La cantidad de tickets determina la probabilidad de un proceso de ejecutarse.
+Dado que inicialmente todos los procesos reciben la misma cantidad de tickets, todos tienen la misma probabilidad.
+Esto se irá modificando como se verá más adelante.
+
+```C
+e->tickets = 100;
+total_tickets += e->tickets;
+```
+
+Al momento de elegir el siguiente proceso se genera primero un número pseudo aleatorio menor o igual a la cantidad de tickets totales.
+Para determinar el ganador se van sumando los tickets de cada proceso *RUNNABLE* hasta que supere el número generado.
+
+```C
+struct Env *idle = NULL;
+#elif SCHED_PROPORTIONAL_SHARE
+	// counter: used to track if we’ve found the winner yet
+	int counter = 0;
+	if (curenv) {
+		if (curenv->env_status == ENV_RUNNING) {
+			idle = curenv;
+		}
+	}
+	// winner: use some call to a random number generator to
+	// get a value, between 0 and the total # of tickets
+	int winner = generate_pseudorandom_value();
+
+	for (int i = 0; i < NENV; i++) {
+		if (envs[i].env_status == ENV_RUNNABLE) {
+			idle = &envs[i];
+			counter += envs[i].tickets;
+			if (counter >= winner) {
+				break;  // found the winner
+			}
+		}
+	}
+	if (idle) {
+		env_run(idle);
+	}
+#endif
+```
+El algoritmo garantiza la ejecución de un proceso válido.
+
+El proceso conserva sus tickets por si vuelve a tener un estado *RUNNABLE*.
+
+```C
+void
+env_destroy(struct Env *e)
+{
+    if (e->env_status == ENV_RUNNING && curenv != e) {
+    e->env_status = ENV_DYING;
+    return;
+    }
+    total_tickets -= e->tickets;
+    env_free(e);
+    
+        if (curenv == e) {
+            // cprintf("[%08x] env_destroy %08x\n", curenv ? curenv->env_id : 0, e->env_id);
+            curenv = NULL;
+            // cprintf("[%08x] env_destroy %08x\n", curenv ? curenv->env_id : 0, e->env_id);
+            sched_yield();
+        }
+}
+```
+
+
+### Modificación de prioridades
+
+Cuando se hace una interrupción por tiempo se reduce un poco la prioridad del proceso actual.
+Esto con el objetivo de reducir la probabilidad de correr un mismo proceso.
+La chance de que un proceso largo sea elegido se reduce con el tiempo.
+
+Sin embargo un proceso largo podría quedar con una probabilidad demasiado baja, produciendo **starvation**. Si además nuevos procesos se suman este efecto se intensifica.
+Para evitar este problema, cada cierta cantidad de interrupciones por tiempo se resetean las prioridades de todos los procesos, lo cual todos tendrán la misma probabilidad de ser elegidos.
+```C
+case IRQ_TIMER:
+    lapic_eoi();
+#ifdef SCHED_PROPORTIONAL_SHARE
+    reduce_current_env_prio();
+    timer_int_counter++;
+    if (timer_int_counter == INTS2BOOST) {
+        timer_int_counter = 0;
+        sched_boost();
+}
+#endif
+sched_yield();
+```
+
+### Reduccion de prioridad
+
+
+
+```C
+void
+reduce_current_env_prio(void)
+{
+if (curenv == NULL)
+return;
+
+	if (curenv->tickets > 10) {
+		total_tickets -= 10;
+		curenv->tickets -= 10;
+	} else {
+		total_tickets -= curenv->tickets - 1;
+		curenv->tickets = 1;
+	}
+}
+```

@@ -70,7 +70,6 @@ sched_yield(void)
 			idle = curenv;
 		}
 	}
-
 	// winner: use some call to a random number generator to
 	// get a value, between 0 and the total # of tickets
 	int winner = generate_pseudorandom_value();
@@ -87,7 +86,6 @@ sched_yield(void)
 	if (idle) {
 		env_run(idle);
 	}
-
 #endif
 
 	// sched_halt never returns
