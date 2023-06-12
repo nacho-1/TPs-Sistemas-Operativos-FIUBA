@@ -63,9 +63,9 @@ sys_getpriority(void)
 }
 
 void
-sys_setpriority(int priority)
+sys_reduce_priority(int relative_percent)
 {
-	syscall(SYS_setpriority, 1, priority, 0, 0, 0, 0);
+	syscall(SYS_reduce_priority, 1, relative_percent, 0, 0, 0, 0);
 }
 
 void

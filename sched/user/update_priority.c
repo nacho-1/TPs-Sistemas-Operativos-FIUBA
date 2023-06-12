@@ -10,9 +10,16 @@ umain(int argc, char **argv)
 	priority = sys_getpriority();
 	cprintf("Actual priority is: %d \n", priority);
 
-	priority = (priority / 2) + 1;
-	sys_setpriority(priority);
-	cprintf("New priority set: %d \n", priority);
+	int relative_percent = 50;
+	sys_reduce_priority(relative_percent);
+	cprintf("Priority reduce in a: %d %% \n", relative_percent);
+
+	priority = sys_getpriority();
+	cprintf("Updated priority now is: %d \n", priority);
+
+	relative_percent = 20;
+	sys_reduce_priority(relative_percent);
+	cprintf("Priority reduce in a: %d %% \n", relative_percent);
 
 	priority = sys_getpriority();
 	cprintf("Updated priority now is: %d \n", priority);
