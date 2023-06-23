@@ -49,6 +49,15 @@ static struct inode {
 typedef struct inode inode_t;
 static uint8_t *inode_table = &blocks[INODE_TABLE * BLOCK_SIZE]; // shortcut a la tabla de inodos
 
+static inode_t *
+get_inode(uint32_t ino)
+{
+	if (ino >= N_INODES)
+		return NULL;
+
+	return (inode_t *) &inode_table[ino * INODE_SIZE];
+}
+
 static void *
 fisopfs_init(struct fuse_conn_info *conn)
 {
