@@ -42,10 +42,12 @@
 #define INODE_TABLE 3
 #define DATA_REGION (INODE_TABLE + N_INODE_BLOCKS)
 
-
-static uint8_t blocks[N_BLOCKS * BLOCK_SIZE];  // El filesystem
+#define SUPERBLOCK_MAGIC 123456
+#define ROOT_INODE 1         // root inode number
+#define ROOT_INODE_NAME "/"  // root inode name
 
 typedef struct {
+	uint32_t ino;
 	mode_t mode;
 	uid_t uid;
 	gid_t gid;
@@ -57,7 +59,11 @@ typedef struct {
 	time_t ctim;
 } inode_t;
 
-static uint8_t *inode_table =
-        &blocks[INODE_TABLE * BLOCK_SIZE];  // shortcut a la tabla de inodos
+typedef struct {
+    int magic;
+    int n_files;
+    int n_dirs;
+} superblock_t;
+
 
 #endif  // _FISOPFS_H_

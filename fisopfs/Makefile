@@ -7,10 +7,12 @@ LDLIBS := $(shell pkg-config fuse --cflags --libs)
 
 # Name for the filesystem!
 FS_NAME := fisopfs
+SRCS :=   $(wildcard *.c) #Todos los .c de la carpeta
 
 all: build
-	
-build: $(FS_NAME)
+
+build:
+	$(CC) $(CFLAGS) $(SRCS) $(LDLIBS) -o $(FS_NAME)
 
 format: .clang-files .clang-format
 	xargs -r clang-format -i <$<

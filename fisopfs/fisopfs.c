@@ -2,14 +2,54 @@
 #include "fisopfs.h"
 #include "bitmap.h"
 
+// El filesystem
+static uint8_t blocks[N_BLOCKS * BLOCK_SIZE];
+
+// superblock
+superblock_t superblock;
+
+// inode bitmap
+word_t __inode_bitmap[N_INODES / BITS_PER_WORD] = { 0 };
+bitmap_t inode_bitmap = { .words = __inode_bitmap,
+	                  .nwords = N_INODES / BITS_PER_WORD};
+
+// data bitmap
+word_t __data_bitmap[N_DATA_BLOCKS / BITS_PER_WORD] = { 0 };
+bitmap_t data_bitmap = { .words = __data_bitmap,
+	                 .nwords = N_DATA_BLOCKS / BITS_PER_WORD };
+
+// inode_table
+inode_t inode_table[N_INODES];
+
+// root inode
+inode_t *root;
+
+
 static inode_t *
 get_inode(uint32_t ino)
 {
 	if (ino >= N_INODES)
 		return NULL;
 
-	return (inode_t *) &inode_table[ino * INODE_SIZE];
+	return (inode_t *) &inode_table[ino];
 }
+
+void
+print_inode(inode_t *inode)
+{
+	printf("[debug] Inode Information\n");
+	printf("--------------------------------\n");
+	printf("[debug] i->ino:				%u\n", inode->ino);
+	printf("[debug] i->mode:			%u\n", inode->mode);
+	printf("[debug] i->uid;:			%u\n", inode->uid);
+	printf("[debug] i->gid:				%u\n", inode->gid);
+	printf("[debug] i->size:			%lu\n", inode->size);
+	printf("[debug] i->n_blocks:			%u\n", inode->n_blocks);
+	printf("[debug] i->atim;:			%lu\n", inode->atim);
+	printf("[debug] i->mtim:			%lu\n", inode->mtim);
+	printf("[debug] i->ctim:			%lu\n", inode->ctim);
+}
+
 
 static void *
 fisopfs_init(struct fuse_conn_info *conn)
@@ -19,12 +59,43 @@ fisopfs_init(struct fuse_conn_info *conn)
 	printf("[debug] Inode size is %lu bytes aligned to %u\n",
 	       sizeof(inode_t),
 	       INODE_SIZE);
+	printf("[debug] An inode block contains %u inodes \n", BLOCK_SIZE / INODE_SIZE);
 	printf("[debug] There's %u inodes in %u blocks\n", N_INODES, N_INODE_BLOCKS);
 	printf("[debug] There's %u data blocks\n", N_DATA_BLOCKS);
 	printf("[debug] Data region start block: %u\n", DATA_REGION);
 
+
+
+	// initialize root inode
+	root = get_inode(ROOT_INODE);
+
+	struct fuse_context *context = fuse_get_context();
+	printf("[debug] DESDE INIT, context uid: %d, context gid: %d\n",
+				context->uid,
+				context->gid);
+
+	root->uid = 1000;
+	root->gid = 1000;
+	root->ino = ROOT_INODE;
+	root->mode = __S_IFDIR | 0777;
+	root->ctim = time(NULL);
+	root->atim = root->ctim;
+	root->mtim = root->ctim;
+	root->n_blocks = 0;
+
+	// mark root inode as used in inode bitmap
+	set_bit(&inode_bitmap, ROOT_INODE);
+
+	print_inode(root);
+
+	// initialize superblock
+	superblock.magic = SUPERBLOCK_MAGIC;
+	superblock.n_dirs = 1;  // One dir: root
+	superblock.n_files = 0;
+
 	return NULL;
 }
+
 
 static int
 fisopfs_getattr(const char *path, struct stat *st)
@@ -104,6 +175,7 @@ static struct fuse_operations operations = {
 	.readdir = fisopfs_readdir,
 	.read = fisopfs_read,
 };
+
 
 int
 main(int argc, char *argv[])
