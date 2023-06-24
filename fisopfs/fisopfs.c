@@ -74,8 +74,8 @@ fisopfs_init(struct fuse_conn_info *conn)
 				context->uid,
 				context->gid);
 
-	root->uid = 1000;
-	root->gid = 1000;
+	root->uid = getuid();
+	root->gid = getgid();
 	root->ino = ROOT_INODE;
 	root->mode = __S_IFDIR | 0777;
 	root->ctim = time(NULL);
