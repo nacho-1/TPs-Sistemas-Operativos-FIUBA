@@ -42,12 +42,14 @@
 #define INODE_TABLE 3
 #define DATA_REGION (INODE_TABLE + N_INODE_BLOCKS)
 
-#define SUPERBLOCK_MAGIC 123456
-#define ROOT_INODE 1         // root inode number
-#define ROOT_INODE_NAME "/"  // root inode name
+
+#define FS_FILENAME_LEN 256
+#define N_FILES_DIR 16
+
+#define MAX_DIRS 16
+#define MAX_FILES 16
 
 typedef struct {
-	uint32_t ino;
 	mode_t mode;
 	uid_t uid;
 	gid_t gid;
@@ -60,10 +62,35 @@ typedef struct {
 } inode_t;
 
 typedef struct {
-    int magic;
-    int n_files;
-    int n_dirs;
+	int magic;
+	int n_files;
+	int n_dirs;
 } superblock_t;
+
+
+typedef struct {
+	char path[FS_FILENAME_LEN];
+	char filename[FS_FILENAME_LEN];  // filename used by FUSE filler
+	int d_ino;                       // inode number
+} file_t;
+
+typedef struct {
+	int n_dir;
+	char path[FS_FILENAME_LEN];
+	char dirname[FS_FILENAME_LEN];  // dirname used by FUSE filler
+	int d_ino;                      // inode number
+	int n_files;
+	int files[N_FILES_DIR];
+	int parent;
+	int level;
+} dirent_t;
+
+
+typedef struct {
+	uint8_t content[BLOCK_SIZE];
+	int free_space;
+	int ref;  // reference to next data block
+} block_t;
 
 
 #endif  // _FISOPFS_H_
