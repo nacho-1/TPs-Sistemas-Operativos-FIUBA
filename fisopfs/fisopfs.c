@@ -8,10 +8,14 @@
 superblock_t superblock;
 
 // inode bitmap
-bitmap_t inode_bitmap;
+word_t __inode_bitmap[N_INODES / BITS_PER_WORD] = { 0 };
+bitmap_t inode_bitmap = { .words = __inode_bitmap,
+	                  .nwords = N_INODES / BITS_PER_WORD };
 
 // data bitmap
-bitmap_t data_bitmap;
+word_t __data_bitmap[N_DATA_BLOCKS / BITS_PER_WORD] = { 0 };
+bitmap_t data_bitmap = { .words = __data_bitmap,
+	                 .nwords = N_DATA_BLOCKS / BITS_PER_WORD };
 
 // inode_table
 inode_t inodes[N_INODES];
@@ -352,15 +356,6 @@ fisopfs_init(struct fuse_conn_info *conn)
 	printf("[debug] There's %u data blocks\n", N_DATA_BLOCKS);
 	printf("[debug] Data region start block: %u\n", DATA_REGION);
 
-	// Init inode bitmap
-	word_t __inode_bitmap[N_INODES / BITS_PER_WORD] = { 0 };
-	inode_bitmap.words = __inode_bitmap;
-	inode_bitmap.nwords = N_INODES / BITS_PER_WORD;
-
-	// Init data bitmap
-	word_t __data_bitmap[N_DATA_BLOCKS / BITS_PER_WORD] = { 0 };
-	data_bitmap.words = __data_bitmap;
-	data_bitmap.nwords = N_DATA_BLOCKS / BITS_PER_WORD;
 
 	// -----------------------------------
 	// initialize root inode
@@ -380,9 +375,6 @@ fisopfs_init(struct fuse_conn_info *conn)
 	root->atim = root->ctim;
 	root->mtim = root->ctim;
 	root->n_blocks = 0;
-
-	// mark root inode as used in inode bitmap
-	set_bit(&inode_bitmap, root_ino);
 
 	print_inode(root);
 
