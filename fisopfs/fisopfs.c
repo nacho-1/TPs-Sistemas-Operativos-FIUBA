@@ -128,7 +128,6 @@ is_file(const char *path)
 	return 0;
 }
 
-
 static int
 fisopfs_getattr(const char *path, struct stat *st)
 {
@@ -309,6 +308,36 @@ add_file(const char *filename, mode_t mode)
 	return 1;
 }
 
+static int
+fisop_createdir(const char *path, mode_t mode)
+{
+	int len = (int) strlen(path);
+	if (len > (MAX_NAME_LEN)) {
+		errno = ENAMETOOLONG;
+		return ENAMETOOLONG;
+	}
+
+	//TODO: USE GET DIR
+	//dirent_t *parent = get_dir(path);
+	dirent_t *parent = &dirs[0];
+	inode_t *inode = &inodes[parent->d_ino];
+	if (parent->level <= 2) {
+		int i = init_inode(__S_IFDIR | 0775);
+		if (i > -1) {
+			dirent_t dir;
+			dir.n_files = 0;
+			strcpy(dir.path, path);
+			strcpy(dir.dirname, path + get_name_index(path));
+			dir.d_ino = i;
+			dir.parent = parent->n_dir;
+			dir.level = parent->level + 1;
+			dir.n_dir = superblock.n_dirs;
+			dirs[superblock.n_dirs++] = dir;
+			return 0;
+		}
+	}
+}
+
 /** Create a file */
 static int
 fisopfs_create(const char *path, mode_t mode, struct fuse_file_info *info)
@@ -406,6 +435,7 @@ static struct fuse_operations operations = {
 	.read = fisopfs_read,
 	.create = fisopfs_create,
 	.utimens = fisopfs_utimens,
+	.mkdir = fisop_createdir,
 };
 
 

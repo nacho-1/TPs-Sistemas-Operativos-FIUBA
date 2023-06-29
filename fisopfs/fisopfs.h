@@ -45,6 +45,7 @@
 
 #define FS_FILENAME_LEN 256
 #define N_FILES_DIR 16
+#define MAX_NAME_LEN 50
 
 #define MAX_DIRS 16
 #define MAX_FILES 16
