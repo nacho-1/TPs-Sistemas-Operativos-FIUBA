@@ -174,16 +174,16 @@ split_path(const char *path, char *parent_path, char *filename)
 	if (path[pathlen - 1] == DELIM_CHAR)
 		pathlen -= 1;  // no estoy seguro si esto puede pasar pero por las dudas
 
-	unsigned i = pathlen - 1;
-	for (; i > 0; i--) {
-		if (path[i] == DELIM_CHAR)
+	unsigned parent_path_len = pathlen - 1;
+	for (; parent_path_len > 0; parent_path_len--) {
+		if (path[parent_path_len] == DELIM_CHAR)
 			break;
 	}
 
-	memcpy(parent_path, path, i);
-	parent_path[i] = '\0';
-	memcpy(filename, path + 1 + i, pathlen - i - 1);
-	filename[pathlen - i - 1] = '\0';
+	memcpy(parent_path, path, parent_path_len);
+	parent_path[parent_path_len] = '\0';
+	memcpy(filename, path + 1 + parent_path_len, pathlen - parent_path_len - 1);
+	filename[pathlen - parent_path_len - 1] = '\0';
 }
 
 void
@@ -379,12 +379,11 @@ fisopfs_create(const char *path, mode_t mode, struct fuse_file_info *info)
 		return -EEXIST;
 	}
 
-	char *parent_path = malloc(strlen(path));
+	char parent_path[FS_MAX_PATH];
 	char filename[FS_FILENAME_LEN];
 	split_path(path, parent_path, filename);
 
 	inode_t *parent = find_inode(parent_path);
-	free(parent_path);
 	if (parent == NULL) {
 		printf("	[debug] Invalid path\n");
 		return -ENOENT;
@@ -425,12 +424,11 @@ fisopfs_mkdir(const char *path, mode_t mode)
 		return -EEXIST;
 	}
 
-	char *parent_path = malloc(strlen(path));
+	char parent_path[FS_MAX_PATH];
 	char dirname[FS_FILENAME_LEN];
 	split_path(path, parent_path, dirname);
 
 	inode_t *parent = find_inode(parent_path);
-	free(parent_path);
 	if (parent == NULL) {
 		printf("	[debug] Invalid path\n");
 		return -ENOENT;
@@ -516,13 +514,11 @@ unlink_inode(const char *path, inode_t *inode)
 {
 	// Delete directory entry from parent dir
 
-	char *parent_path = malloc(strlen(path));
+	char parent_path[FS_MAX_PATH];
 	char filename[FS_FILENAME_LEN];
 	split_path(path, parent_path, filename);
 
 	inode_t *parent = find_inode(parent_path);
-	free(parent_path);
-
 
 	unsigned n_dentries = parent->size / DENTRY_SIZE;
 

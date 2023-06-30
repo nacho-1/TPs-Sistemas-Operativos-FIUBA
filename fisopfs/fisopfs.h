@@ -42,6 +42,7 @@
 #define ROOT_INODE_NAME "/"
 
 #define FS_FILENAME_LEN 256
+#define FS_MAX_PATH 1024
 
 typedef struct {
 	uint32_t ino;
