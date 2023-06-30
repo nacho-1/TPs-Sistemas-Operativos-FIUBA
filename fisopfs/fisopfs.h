@@ -28,10 +28,9 @@
 #define N_DATA_BLOCKS_PER_INODE                                                \
 	32  // arbitrario, idealmente que sea potencia de 2
 #define N_INODE_BLOCKS                                                         \
-	(                                                                      \
-	        N_BLOCKS /                                                     \
-	        N_INODES_PER_BLOCK)  // al menos un inodo por cada bloque, potencias
-	                             // de 2 para que la division no tenga resto
+	(N_BLOCKS /                                                            \
+	 N_INODES_PER_BLOCK)  // al menos un inodo por cada bloque, potencias
+	                      // de 2 para que la division no tenga resto
 #define N_INODES (N_INODE_BLOCKS * N_INODES_PER_BLOCK)
 
 #define N_DATA_BLOCKS (N_BLOCKS - (3 + N_INODE_BLOCKS))
