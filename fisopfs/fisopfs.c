@@ -418,10 +418,6 @@ fisopfs_write(const char *path,
 		if (i < inode->n_blocks) {
 			block = get_data_block(inode->data_blocks[i]);
 		} else {
-			if (inode->n_blocks == N_DATA_BLOCKS_PER_INODE) {// inode is full
-				printf("	[debug] Inode is full. Size: %lu\n", inode->size);
-				return bytes_written;
-			}
 			uint32_t block_no;
 			block = init_data_block(&block_no);
 			if (block == NULL) // TODO: no hay mas espacio en el disco. Que hacemos en este caso?
