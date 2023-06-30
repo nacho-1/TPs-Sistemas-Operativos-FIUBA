@@ -3,7 +3,7 @@ IndentWidth: 8
 UseTab: ForIndentation
 ContinuationIndentWidth: 8
 
-ColumnLimit: 80
+ColumnLimit: 0
 SortIncludes: false
 BreakBeforeBraces: Linux
 
