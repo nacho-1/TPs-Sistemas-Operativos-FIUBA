@@ -63,15 +63,17 @@ strsplit(const char *src, char *dest[], char delim)
 static void
 fill_stat(struct stat *st, inode_t *inode)
 {
-	st->st_mode = inode->mode;
 	st->st_ino = inode->ino;
-	st->st_gid = inode->gid;
+	st->st_mode = inode->mode;
 	st->st_uid = inode->uid;
+	st->st_gid = inode->gid;
+	st->st_size = inode->size;
+	st->st_blocks = inode->n_blocks;
+	st->st_blksize = BLOCK_SIZE;
 	inode->atim = time(NULL);
 	st->st_atime = inode->atim;
 	st->st_mtime = inode->mtim;
 	st->st_ctime = inode->ctim;
-	st->st_blocks = inode->n_blocks;
 }
 
 static inode_t *
@@ -412,11 +414,43 @@ fisopfs_write(const char *path,
 	unsigned bytes_written = 0;
 
 	for (unsigned i = first_blk_no; i <= last_blk_no; i++) {
-		uint8_t *block = get_data_block(inode->data_blocks[i]);
-		if (i == first_blk_no) {
-			memcpy(block + first_blk_offset, buffer, )
+		uint8_t *block = NULL;
+		if (i < inode->n_blocks) {
+			block = get_data_block(inode->data_blocks[i]);
+		} else {
+			if (inode->n_blocks == N_DATA_BLOCKS_PER_INODE) {// inode is full
+				printf("	[debug] Inode is full. Size: %lu\n", inode->size);
+				return bytes_written;
+			}
+			uint32_t block_no;
+			block = init_data_block(&block_no);
+			if (block == NULL) // TODO: no hay mas espacio en el disco. Que hacemos en este caso?
+				return bytes_written;
+			inode->data_blocks[inode->n_blocks] = block_no;
+			inode->n_blocks++;
+			printf("	[debug] Initialized data block for inode\n");
 		}
+
+		unsigned start_offset = 0;
+		unsigned write_size = BLOCK_SIZE;
+		if (i == first_blk_no) {
+			start_offset = first_blk_offset;
+			write_size = BLOCK_SIZE - first_blk_offset;
+		}
+		if (i == last_blk_no)
+			write_size = last_blk_offset - start_offset;
+
+		memcpy(block + start_offset, buffer + bytes_written, write_size);
+		printf("	[debug] Wrote %u bytes to file\n", write_size);
+		bytes_written += write_size;
+		inode->size = inode->size > (offset + bytes_written) ? inode->size : (offset + bytes_written);
+		printf("	[debug] File size is: %lu\n", inode->size);
+		inode->atim = time(NULL);
+		inode->mtim = inode->atim;
 	}
+
+	assert(bytes_written == size);
+	return bytes_written;
 }
 
 static int
@@ -649,6 +683,7 @@ static struct fuse_operations operations = {
 	.getattr = fisopfs_getattr,
 	.readdir = fisopfs_readdir,
 	.read = fisopfs_read,
+	.write = fisopfs_write,
 	.create = fisopfs_create,
 	.mkdir = fisopfs_mkdir,
 	.utimens = fisopfs_utimens,
