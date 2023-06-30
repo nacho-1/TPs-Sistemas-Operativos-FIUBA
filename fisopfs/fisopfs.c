@@ -132,10 +132,12 @@ find_inode(const char *path)
 
 	if (!token) return NULL; // Ejemplo: "/////" -> NULL
 
-	memcpy(tokens[path_level++], token, strlen(token));
+  	// Los tokens devueltos por strtok terminan en \0
+	memcpy(tokens[path_level++], token, strlen(token) + 1);
 	printf("		[debug] find_inode. token: %s\n", token);
+
 	while ((token = strtok(NULL, "/"))) {
-		memcpy(tokens[path_level++], token, strlen(token));
+		memcpy(tokens[path_level++], token, strlen(token) + 1);
 		printf("		[debug] find_inode. token: %s\n", token);
 	}
 
