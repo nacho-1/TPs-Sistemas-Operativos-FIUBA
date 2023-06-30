@@ -351,19 +351,52 @@ fisopfs_read(const char *path,
 	if (size == 0)
 		return 0;
 
-	unsigned blocks_2_read = size / BLOCK_SIZE;
-	unsigned last_block_offset = size % BLOCK_SIZE;
+	unsigned first_blk_no = offset / BLOCK_SIZE;
+	unsigned first_blk_offset = offset % BLOCK_SIZE;
+	unsigned last_blk_no = (size + offset) / BLOCK_SIZE;
+	unsigned last_blk_offset = (size + offset) % BLOCK_SIZE;
+	unsigned bytes_read = 0;
 
-	for (unsigned i = 0; i <= blocks_2_read; i++) {
+	for (unsigned i = first_blk_no; i <= last_blk_no; i++) {
 		uint8_t *block = get_data_block(inode->data_blocks[i]);
-		if (i < blocks_2_read)
-			memcpy(buffer + i * BLOCK_SIZE, block, BLOCK_SIZE);
-		else
-			memcpy(buffer + i * BLOCK_SIZE, block, last_block_offset);
+		if (i == first_blk_no) {
+			memcpy(buffer, block + first_blk_offset, BLOCK_SIZE - first_blk_offset);
+			bytes_read += BLOCK_SIZE - first_blk_offset;
+		} else if (i == last_blk_no && i != first_blk_no) {
+			// no se si hace falta aclarar que sea distinto a first_blk_no pero por las dudas
+			memcpy(buffer + bytes_read, block, last_blk_offset);
+			bytes_read += last_blk_offset;
+		} else {
+			memcpy(buffer + bytes_read, block, BLOCK_SIZE);
+			bytes_read += BLOCK_SIZE;
+		}
 	}
 
 	inode->atim = time(NULL);
-	return size;
+	assert(bytes_read == size);
+	return bytes_read;
+}
+
+static int
+fisopfs_write(const char *path,
+              const char *buf,
+              size_t size,
+              off_t offset,
+              struct fuse_file_info *fi)
+{
+	printf("[debug] fisopfs_write - path: %s, size: %lu, offset: %lu\n", path, size, offset);
+
+	inode_t *inode = find_inode(path);
+	if (inode == NULL)
+		return -ENOENT;
+
+	if (S_ISDIR(inode->mode))
+		return -EISDIR;
+
+	// TODO: chequear permisos?
+	printf("	[debug] File size is %lu\n", inode->size);
+
+
 }
 
 static int
