@@ -532,17 +532,11 @@ unlink_inode(const char *path, inode_t *inode)
 	free(parent_path);
 
 
-	printf("[debug] filename: %s\n", filename);
-
 	unsigned n_dentries = parent->size / DENTRY_SIZE;
 
-	uint32_t dir_blocks = n_dentries % N_DENTRY_PER_BLOCK == 0
-	                              ? n_dentries / N_DENTRY_PER_BLOCK
-	                              : n_dentries / N_DENTRY_PER_BLOCK + 1;
 
-	for (int i = 0; i < dir_blocks; i++) {
-		dirent_t *entries = (dirent_t *) get_data_block(
-		        parent->data_blocks[parent->data_blocks[i]]);
+	for (int i = 0; i < parent->n_blocks; i++) {
+
 
 		uint32_t nentries =
 		        (i + 1) * N_DENTRY_PER_BLOCK <= n_dentries
@@ -550,9 +544,12 @@ unlink_inode(const char *path, inode_t *inode)
 		                : n_dentries % N_DENTRY_PER_BLOCK;
 
 		int index = -1;
+		dirent_t * curr_entry;
+		dirent_t * next_entry;
 		for (int j = 0; j < nentries; j++) {
-			if (inode->ino == entries[j].d_ino &&
-			    strcmp(entries[j].d_name, filename) == 0) {
+			curr_entry = get_dirent(j, parent);
+			if (inode->ino == curr_entry->d_ino &&
+			    strcmp(curr_entry->d_name, filename) == 0) {
 				printf("[debug] Found entry at index %d\n", j);
 				index = j;
 			}
@@ -561,7 +558,9 @@ unlink_inode(const char *path, inode_t *inode)
 				       "entries[%d]\n",
 				       j,
 				       j + 1);
-				entries[j] = entries[j + 1];
+				next_entry = get_dirent(j+1, parent);
+				strcpy(curr_entry->d_name,next_entry->d_name);
+				curr_entry->d_ino = next_entry->d_ino;
 			}
 		}
 		if (index > 0)
@@ -582,7 +581,7 @@ unlink_inode(const char *path, inode_t *inode)
 static int
 fisopfs_unlink(const char *path)
 {
-	printf("[debug] fisopfs_getattr - path: %s\n", path);
+	printf("[debug] fisopfs_unlink - path: %s\n", path);
 
 	inode_t *inode = find_inode(path);
 	if (!inode)
