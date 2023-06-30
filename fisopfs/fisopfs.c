@@ -6,9 +6,6 @@
 #define END_STRING '\0'
 #define DELIM_CHAR '/'
 
-#define MAX_CONTENIDO 100
-static char fisop_file_contenidos[MAX_CONTENIDO] = "hola fisopfs!\n";
-
 // El filesystem
 
 // superblock
@@ -328,19 +325,39 @@ fisopfs_read(const char *path,
              off_t offset,
              struct fuse_file_info *fi)
 {
-	printf("[debug] fisopfs_read - path: %s, offset: %lu, size: %lu\n", path, offset, size);
+	printf("[debug] fisopfs_read - path: %s, size: %lu, offset: %lu\n", path, size, offset);
 
-	// Solo tenemos un archivo hardcodeado!
-	if (strcmp(path, "/fisop") != 0)
+	inode_t *inode = find_inode(path);
+	if (inode == NULL)
 		return -ENOENT;
 
-	if (offset + size > strlen(fisop_file_contenidos))
-		size = strlen(fisop_file_contenidos) - offset;
+	if (S_ISDIR(inode->mode))
+		return -EISDIR;
 
-	size = size > 0 ? size : 0;
+	// TODO: chequear permisos?
+	printf("	[debug] File size is %lu\n", inode->size);
 
-	strncpy(buffer, fisop_file_contenidos + offset, size);
+	if (inode->size < offset)
+		return -ERANGE;
 
+	if (size > inode->size - offset)
+		size = inode->size - offset;
+
+	if (size == 0)
+		return 0;
+
+	unsigned blocks_2_read = size / BLOCK_SIZE;
+	unsigned last_block_offset = size % BLOCK_SIZE;
+
+	for (unsigned i = 0; i <= blocks_2_read; i++) {
+		uint8_t *block = get_data_block(inode->data_blocks[i]);
+		if (i < blocks_2_read)
+			memcpy(buffer + i * BLOCK_SIZE, block, BLOCK_SIZE);
+		else
+			memcpy(buffer + i * BLOCK_SIZE, block, last_block_offset);
+	}
+
+	inode->atim = time(NULL);
 	return size;
 }
 
