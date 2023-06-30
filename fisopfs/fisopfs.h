@@ -59,8 +59,8 @@ typedef struct {
 
 typedef struct {
 	int magic;
-	int n_files;
-	int n_dirs;
+	unsigned n_files;
+	unsigned n_dirs;
 	uint32_t root_ino;
 } superblock_t;
 
