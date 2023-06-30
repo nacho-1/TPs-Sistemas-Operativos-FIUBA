@@ -21,10 +21,17 @@
 #define BLOCK_SIZE 4096  // basado en el tamaño de las paginas en x86
 
 // Macros de inodos
-#define INODE_SIZE ALIGNPO2(sizeof(inode_t))  // alineado a potencia de 2 para que entren justo en un bloque
+#define INODE_SIZE                                                             \
+	ALIGNPO2(sizeof(                                                       \
+	        inode_t))  // alineado a potencia de 2 para que entren justo en un bloque
 #define N_INODES_PER_BLOCK (BLOCK_SIZE / INODE_SIZE)
-#define N_DATA_BLOCKS_PER_INODE 32  // arbitrario, idealmente que sea potencia de 2
-#define N_INODE_BLOCKS (N_BLOCKS / N_INODES_PER_BLOCK)  // al menos un inodo por cada bloque, potencias de 2 para que la division no tenga resto
+#define N_DATA_BLOCKS_PER_INODE                                                \
+	32  // arbitrario, idealmente que sea potencia de 2
+#define N_INODE_BLOCKS                                                         \
+	(                                                                      \
+	        N_BLOCKS /                                                     \
+	        N_INODES_PER_BLOCK)  // al menos un inodo por cada bloque, potencias
+	                             // de 2 para que la division no tenga resto
 #define N_INODES (N_INODE_BLOCKS * N_INODES_PER_BLOCK)
 
 #define N_DATA_BLOCKS (N_BLOCKS - (3 + N_INODE_BLOCKS))
@@ -66,7 +73,7 @@ typedef struct {
 
 typedef struct {
 	char d_name[FS_FILENAME_LEN];
-	uint32_t d_ino;                      // inode number
+	uint32_t d_ino;  // inode number
 } dirent_t;
 
 #endif  // _FISOPFS_H_

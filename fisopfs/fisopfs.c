@@ -41,7 +41,8 @@ strsplit(const char *src, char *dest[], char delim)
 	for (int i = 0; src[i] != END_STRING; i++) {
 		if (src[i] == delim) {
 			if (copysize > 0) {
-				dest[argcount] = malloc(copysize + 1); // string + \0
+				dest[argcount] =
+				        malloc(copysize + 1);  // string + \0
 				memcpy(dest[argcount], src + copystart, copysize);
 				dest[argcount][copysize] = '\0';
 				copysize = 0;
@@ -153,7 +154,8 @@ find_inode(const char *path)
 	if (strcmp(path, ROOT_INODE_NAME) == 0)
 		return curr_dir;
 
-	unsigned max_tokens = strlen(path) / 2; // puede haber este máximo de tokens
+	unsigned max_tokens =
+	        strlen(path) / 2;  // puede haber este máximo de tokens
 	char **tokens = malloc(max_tokens * sizeof(char *));
 	unsigned path_level = strsplit(path, tokens, DELIM_CHAR);
 
@@ -175,7 +177,8 @@ split_path(const char *path, char *parent_path, char *filename)
 {
 	unsigned pathlen = strlen(path);
 	if (path[pathlen - 1] == DELIM_CHAR)
-		pathlen -= 1; // no estoy seguro si esto puede pasar pero por las dudas
+		pathlen -=
+		        1;  // no estoy seguro si esto puede pasar pero por las dudas
 
 	unsigned i = pathlen - 1;
 	for (; i > 0; i--) {
@@ -253,7 +256,8 @@ insert_dentry(inode_t *parent, uint32_t ino, const char *d_name)
 		uint32_t block_no;
 		uint8_t *block = init_data_block(&block_no);
 		if (block == NULL) {
-			printf("	[debug] Couldn't initialize new data block\n");
+			printf("	[debug] Couldn't initialize new data "
+			       "block\n");
 			return -ENOMEM;
 		}
 		parent->data_blocks[parent->n_blocks] = block_no;
@@ -442,31 +446,31 @@ fisopfs_mkdir(const char *path, mode_t mode)
 static int
 fisop_createdir(const char *path, mode_t mode)
 {
-	int len = (int) strlen(path);
-	if (len > (MAX_NAME_LEN)) {
-		errno = ENAMETOOLONG;
-		return ENAMETOOLONG;
-	}
+        int len = (int) strlen(path);
+        if (len > (MAX_NAME_LEN)) {
+                errno = ENAMETOOLONG;
+                return ENAMETOOLONG;
+        }
 
-	//TODO: USE GET DIR
-	//dirent_t *parent = get_dir(path);
-	dirent_t *parent = &dirs[0];
-	inode_t *inode = &inodes[parent->d_ino];
-	if (parent->level <= 2) {
-		int i = init_inode(__S_IFDIR | 0775);
-		if (i > -1) {
-			dirent_t dir;
-			dir.n_files = 0;
-			strcpy(dir.path, path);
-			strcpy(dir.dirname, path + get_name_index(path));
-			dir.d_ino = i;
-			dir.parent = parent->n_dir;
-			dir.level = parent->level + 1;
-			dir.n_dir = superblock.n_dirs;
-			dirs[superblock.n_dirs++] = dir;
-			return 0;
-		}
-	}
+        //TODO: USE GET DIR
+        //dirent_t *parent = get_dir(path);
+        dirent_t *parent = &dirs[0];
+        inode_t *inode = &inodes[parent->d_ino];
+        if (parent->level <= 2) {
+                int i = init_inode(__S_IFDIR | 0775);
+                if (i > -1) {
+                        dirent_t dir;
+                        dir.n_files = 0;
+                        strcpy(dir.path, path);
+                        strcpy(dir.dirname, path + get_name_index(path));
+                        dir.d_ino = i;
+                        dir.parent = parent->n_dir;
+                        dir.level = parent->level + 1;
+                        dir.n_dir = superblock.n_dirs;
+                        dirs[superblock.n_dirs++] = dir;
+                        return 0;
+                }
+        }
 }
  */
 
@@ -488,22 +492,30 @@ fisopfs_utimens(const char *path, const struct timespec tv[2])
 	inode->ctim = mtime.tv_sec;
 
 	return 0;
-
 }
 
 static void *
 fisopfs_init(struct fuse_conn_info *conn)
 {
 	printf("[debug] fisopfs init\n");
-	printf("	[debug] There's %u blocks of %u bytes each\n", N_BLOCKS, BLOCK_SIZE);
-	printf("	[debug] Inode size is %lu bytes aligned to %u\n", sizeof(inode_t), INODE_SIZE);
-	printf("	[debug] An inode block contains %u inodes \n", BLOCK_SIZE / INODE_SIZE);
-	printf("	[debug] There's %u inodes in %u blocks\n", N_INODES, N_INODE_BLOCKS);
+	printf("	[debug] There's %u blocks of %u bytes each\n",
+	       N_BLOCKS,
+	       BLOCK_SIZE);
+	printf("	[debug] Inode size is %lu bytes aligned to %u\n",
+	       sizeof(inode_t),
+	       INODE_SIZE);
+	printf("	[debug] An inode block contains %u inodes \n",
+	       BLOCK_SIZE / INODE_SIZE);
+	printf("	[debug] There's %u inodes in %u blocks\n",
+	       N_INODES,
+	       N_INODE_BLOCKS);
 	printf("	[debug] There's %u data blocks\n", N_DATA_BLOCKS);
 	printf("	[debug] Data region start block: %u\n\n", DATA_REGION);
 
 	struct fuse_context *context = fuse_get_context();
-	printf("	[debug] context uid: %d, context gid: %d\n", context->uid, context->gid);
+	printf("	[debug] context uid: %d, context gid: %d\n",
+	       context->uid,
+	       context->gid);
 
 	// -----------------------------------
 	// initialize root inode
@@ -535,35 +547,38 @@ unlink_inode(const char *path, inode_t *inode)
 
 	unsigned n_dentries = parent->size / DENTRY_SIZE;
 
-	dirent_t * curr_entry;
-	dirent_t * next_entry;
+	dirent_t *curr_entry;
+	dirent_t *next_entry;
 
 	int index = -1;
 
 	for (int i = 0; i < parent->n_blocks; i++) {
-
-		uint32_t nentries =
-		        (i + 1) * N_DENTRY_PER_BLOCK <= n_dentries
-		                ? N_DENTRY_PER_BLOCK
-		                : n_dentries % N_DENTRY_PER_BLOCK;
+		uint32_t nentries = (i + 1) * N_DENTRY_PER_BLOCK <= n_dentries
+		                            ? N_DENTRY_PER_BLOCK
+		                            : n_dentries % N_DENTRY_PER_BLOCK;
 
 
 		for (int j = 0; j < nentries; j++) {
-			curr_entry = get_dirent(j + i * N_DENTRY_PER_BLOCK, parent);
+			curr_entry =
+			        get_dirent(j + i * N_DENTRY_PER_BLOCK, parent);
 			if (inode->ino == curr_entry->d_ino &&
 			    strcmp(curr_entry->d_name, filename) == 0) {
 				printf("[debug] Found entry at index %d\n", j);
 				index = j;
 			}
 
-			if (index >= 0){
-				if( !((j == nentries - 1) && (i == parent->n_blocks - 1)) ) {
+			if (index >= 0) {
+				if (!((j == nentries - 1) &&
+				      (i == parent->n_blocks - 1))) {
 					printf("[debug] assigning entry: %d = "
-						"entry: %d \n",
-						j + i * N_DENTRY_PER_BLOCK,
-						j+1 + i * N_DENTRY_PER_BLOCK);
-					next_entry = get_dirent(j+1 + i * N_DENTRY_PER_BLOCK, parent);
-					strcpy(curr_entry->d_name,next_entry->d_name);
+					       "entry: %d \n",
+					       j + i * N_DENTRY_PER_BLOCK,
+					       j + 1 + i * N_DENTRY_PER_BLOCK);
+					next_entry = get_dirent(
+					        j + 1 + i * N_DENTRY_PER_BLOCK,
+					        parent);
+					strcpy(curr_entry->d_name,
+					       next_entry->d_name);
 					curr_entry->d_ino = next_entry->d_ino;
 				}
 			}
@@ -580,10 +595,11 @@ unlink_inode(const char *path, inode_t *inode)
 	parent->size -= DENTRY_SIZE;
 	print_inode(parent);
 
-	if (((n_dentries - 1) % N_DENTRY_PER_BLOCK) == 0){
-			printf("[debug] Data block %d will be freed\n", parent->data_blocks[parent->n_blocks-1]);
-			clear_bit(&data_bitmap, parent->data_blocks[parent->n_blocks-1]);
-			parent->n_blocks--;
+	if (((n_dentries - 1) % N_DENTRY_PER_BLOCK) == 0) {
+		printf("[debug] Data block %d will be freed\n",
+		       parent->data_blocks[parent->n_blocks - 1]);
+		clear_bit(&data_bitmap, parent->data_blocks[parent->n_blocks - 1]);
+		parent->n_blocks--;
 	}
 
 
@@ -604,7 +620,6 @@ fisopfs_unlink(const char *path)
 
 
 	return unlink_inode(path, inode);
-
 }
 
 static struct fuse_operations operations = {

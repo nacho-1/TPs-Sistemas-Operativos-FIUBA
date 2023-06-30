@@ -27,7 +27,8 @@ get_free_bit(bitmap_t *bitmap)
 		for (uint32_t j = 0; j < BITS_PER_WORD; j++) {
 			bitno = j + (i * BITS_PER_WORD);
 			if (get_bit(bitmap, bitno) == 0) {
-				printf("	[debug] get_free_bit - First free bit "
+				printf("	[debug] get_free_bit - First "
+				       "free bit "
 				       "in position: "
 				       "%d\n",
 				       bitno);
