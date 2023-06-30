@@ -240,6 +240,7 @@ init_data_block(uint32_t *block_no)
 		return NULL;
 	}
 	set_bit(&data_bitmap, free_bit);
+	printf("	[debug] Initializating data block #%d\n", free_bit);
 
 	*block_no = (uint32_t) free_bit;
 	return get_data_block(*block_no);
@@ -534,43 +535,57 @@ unlink_inode(const char *path, inode_t *inode)
 
 	unsigned n_dentries = parent->size / DENTRY_SIZE;
 
+	dirent_t * curr_entry;
+	dirent_t * next_entry;
+
+	int index = -1;
 
 	for (int i = 0; i < parent->n_blocks; i++) {
-
 
 		uint32_t nentries =
 		        (i + 1) * N_DENTRY_PER_BLOCK <= n_dentries
 		                ? N_DENTRY_PER_BLOCK
 		                : n_dentries % N_DENTRY_PER_BLOCK;
 
-		int index = -1;
-		dirent_t * curr_entry;
-		dirent_t * next_entry;
+
 		for (int j = 0; j < nentries; j++) {
-			curr_entry = get_dirent(j, parent);
+			curr_entry = get_dirent(j + i * N_DENTRY_PER_BLOCK, parent);
 			if (inode->ino == curr_entry->d_ino &&
 			    strcmp(curr_entry->d_name, filename) == 0) {
 				printf("[debug] Found entry at index %d\n", j);
 				index = j;
 			}
-			if (index >= 0 && j < nentries - 1) {
-				printf("[debug] assigning entries[%d] = "
-				       "entries[%d]\n",
-				       j,
-				       j + 1);
-				next_entry = get_dirent(j+1, parent);
-				strcpy(curr_entry->d_name,next_entry->d_name);
-				curr_entry->d_ino = next_entry->d_ino;
+
+			if (index >= 0){
+				if( !((j == nentries - 1) && (i == parent->n_blocks - 1)) ) {
+					printf("[debug] assigning entry: %d = "
+						"entry: %d \n",
+						j + i * N_DENTRY_PER_BLOCK,
+						j+1 + i * N_DENTRY_PER_BLOCK);
+					next_entry = get_dirent(j+1 + i * N_DENTRY_PER_BLOCK, parent);
+					strcpy(curr_entry->d_name,next_entry->d_name);
+					curr_entry->d_ino = next_entry->d_ino;
+				}
 			}
 		}
-		if (index > 0)
-			break;
 	}
 
-	printf("[debug] deleting entry: %s\n", filename);
+	if (index < 0) {
+		printf("[debug] File not found for deleting: %s\n", filename);
+		return -ENOENT;
+	}
+
+	printf("[debug] Deleting entry: %s\n", filename);
 
 	parent->size -= DENTRY_SIZE;
 	print_inode(parent);
+
+	if (((n_dentries - 1) % N_DENTRY_PER_BLOCK) == 0){
+			printf("[debug] Data block %d will be freed\n", parent->data_blocks[parent->n_blocks-1]);
+			clear_bit(&data_bitmap, parent->data_blocks[parent->n_blocks-1]);
+			parent->n_blocks--;
+	}
+
 
 	clear_bit(&inode_bitmap, inode->ino);
 
