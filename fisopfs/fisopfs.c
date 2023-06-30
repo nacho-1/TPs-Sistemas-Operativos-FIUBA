@@ -543,8 +543,7 @@ unlink_inode(const char *path, inode_t *inode)
 
 
 		for (int j = 0; j < nentries; j++) {
-			curr_entry =
-			        get_dirent(j + i * N_DENTRY_PER_BLOCK, parent);
+			curr_entry = get_dirent(j + i * N_DENTRY_PER_BLOCK, parent);
 			if (inode->ino == curr_entry->d_ino &&
 			    strcmp(curr_entry->d_name, filename) == 0) {
 				printf("[debug] Found entry at index %d\n", j);
