@@ -21,16 +21,10 @@
 #define BLOCK_SIZE 4096  // basado en el tamaño de las paginas en x86
 
 // Macros de inodos
-#define INODE_SIZE                                                             \
-	ALIGNPO2(sizeof(                                                       \
-	        inode_t))  // alineado a potencia de 2 para que entren justo en un bloque
+#define INODE_SIZE ALIGNPO2(sizeof(inode_t))  // alineado a potencia de 2 para que entren justo en un bloque
 #define N_INODES_PER_BLOCK (BLOCK_SIZE / INODE_SIZE)
-#define N_DATA_BLOCKS_PER_INODE                                                \
-	32  // arbitrario, idealmente que sea potencia de 2
-#define N_INODE_BLOCKS                                                         \
-	(N_BLOCKS /                                                            \
-	 N_INODES_PER_BLOCK)  // al menos un inodo por cada bloque, potencias
-	                      // de 2 para que la division no tenga resto
+#define N_DATA_BLOCKS_PER_INODE 32  // arbitrario, idealmente que sea potencia de 2
+#define N_INODE_BLOCKS (N_BLOCKS / N_INODES_PER_BLOCK)  // al menos un inodo por cada bloque, potencias de 2 para que la division no tenga resto
 #define N_INODES (N_INODE_BLOCKS * N_INODES_PER_BLOCK)
 
 #define N_DATA_BLOCKS (N_BLOCKS - (3 + N_INODE_BLOCKS))
@@ -42,56 +36,37 @@
 #define INODE_TABLE 3
 #define DATA_REGION (INODE_TABLE + N_INODE_BLOCKS)
 
+#define DENTRY_SIZE ALIGNPO2(sizeof(dirent_t))
+#define N_DENTRY_PER_BLOCK (BLOCK_SIZE / DENTRY_SIZE)
+#define N_DENTRY_PER_DIR (N_DENTRY_PER_BLOCK * N_DATA_BLOCKS_PER_INODE)
+#define ROOT_INODE_NAME "/"
 
 #define FS_FILENAME_LEN 256
-#define N_FILES_DIR 16
-#define MAX_NAME_LEN 50
-
-#define MAX_DIRS 16
-#define MAX_FILES 16
 
 typedef struct {
+	uint32_t ino;
 	mode_t mode;
 	uid_t uid;
 	gid_t gid;
 	size_t size;
 	uint8_t n_blocks;
-	unsigned data_blocks[N_DATA_BLOCKS_PER_INODE];
+	uint32_t data_blocks[N_DATA_BLOCKS_PER_INODE];
 	time_t atim;
 	time_t mtim;
 	time_t ctim;
+	uint32_t parent;
 } inode_t;
 
 typedef struct {
 	int magic;
 	int n_files;
 	int n_dirs;
+	uint32_t root_ino;
 } superblock_t;
 
-
 typedef struct {
-	char path[FS_FILENAME_LEN];
-	char filename[FS_FILENAME_LEN];  // filename used by FUSE filler
-	int d_ino;                       // inode number
-} file_t;
-
-typedef struct {
-	int n_dir;
-	char path[FS_FILENAME_LEN];
-	char dirname[FS_FILENAME_LEN];  // dirname used by FUSE filler
-	int d_ino;                      // inode number
-	int n_files;
-	int files[N_FILES_DIR];
-	int parent;
-	int level;
+	char d_name[FS_FILENAME_LEN];
+	uint32_t d_ino;                      // inode number
 } dirent_t;
-
-
-typedef struct {
-	uint8_t content[BLOCK_SIZE];
-	int free_space;
-	int ref;  // reference to next data block
-} block_t;
-
 
 #endif  // _FISOPFS_H_
