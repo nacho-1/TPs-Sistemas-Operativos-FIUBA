@@ -262,6 +262,8 @@ insert_dentry(inode_t *parent, uint32_t ino, const char *d_name)
 	dent->d_ino = ino;
 	strcpy(dent->d_name, d_name);
 	parent->size += DENTRY_SIZE;
+	parent->atim = time(NULL);
+	parent->mtim = parent->atim;
 	return 0;
 }
 
