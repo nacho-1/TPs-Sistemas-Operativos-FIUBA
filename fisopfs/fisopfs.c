@@ -514,14 +514,14 @@ unlink_inode(const char *path, inode_t *inode)
 			curr_entry = get_dirent(j + i * N_DENTRY_PER_BLOCK, parent);
 			if (inode->ino == curr_entry->d_ino &&
 			    strcmp(curr_entry->d_name, filename) == 0) {
-				printf("[debug] Found entry at index %d\n", j);
+				printf("	[debug] Found entry at index %d\n", j);
 				index = j;
 			}
 
 			if (index >= 0) {
 				if (!((j == nentries - 1) &&
 				      (i == parent->n_blocks - 1))) {
-					printf("[debug] assigning entry: %d = entry: %d \n",
+					printf("	[debug] assigning entry: %d = entry: %d \n",
 					       j + i * N_DENTRY_PER_BLOCK,
 					       j + 1 + i * N_DENTRY_PER_BLOCK);
 					next_entry = get_dirent(j + 1 + i * N_DENTRY_PER_BLOCK, parent);
@@ -533,17 +533,17 @@ unlink_inode(const char *path, inode_t *inode)
 	}
 
 	if (index < 0) {
-		printf("[debug] File not found for deleting: %s\n", filename);
+		printf("	[debug] File not found for deleting: %s\n", filename);
 		return -ENOENT;
 	}
 
-	printf("[debug] Deleting entry: %s\n", filename);
+	printf("	[debug] Deleting entry: %s\n", filename);
 
 	parent->size -= DENTRY_SIZE;
 	print_inode(parent);
 
 	if (((n_dentries - 1) % N_DENTRY_PER_BLOCK) == 0) {
-		printf("[debug] Data block %d will be freed\n", parent->data_blocks[parent->n_blocks - 1]);
+		printf("	[debug] Data block %d will be freed\n", parent->data_blocks[parent->n_blocks - 1]);
 		clear_bit(&data_bitmap, parent->data_blocks[parent->n_blocks - 1]);
 		parent->n_blocks--;
 	}
