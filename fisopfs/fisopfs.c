@@ -365,9 +365,8 @@ fisopfs_read(const char *path,
 			start_offset = first_blk_offset;
 			read_size = BLOCK_SIZE - first_blk_offset;
 		}
-		if (i == last_blk_no) {
-			read_size = last_blk_offset;
-		}
+		if (i == last_blk_no)
+			read_size = last_blk_offset - start_offset;
 
 		memcpy(buffer + bytes_read, block + start_offset, read_size);
 		bytes_read += read_size;
@@ -378,7 +377,6 @@ fisopfs_read(const char *path,
 	return bytes_read;
 }
 
-/*
 static int
 fisopfs_write(const char *path,
               const char *buffer,
@@ -420,7 +418,6 @@ fisopfs_write(const char *path,
 		}
 	}
 }
- */
 
 static int
 fisopfs_create(const char *path, mode_t mode, struct fuse_file_info *info)
