@@ -475,7 +475,19 @@ fisopfs_utimens(const char *path, const struct timespec tv[2])
 {
 	printf("[debug] fisopfs_utimens - path: %s\n", path);
 
+	inode_t *inode = find_inode(path);
+	if (!inode)
+		return -ENOENT;
+
+	struct timespec atime = tv[0];
+	struct timespec mtime = tv[1];
+
+	inode->atim = atime.tv_sec;
+	inode->mtim = mtime.tv_sec;
+	inode->ctim = mtime.tv_sec;
+
 	return 0;
+
 }
 
 static void *
