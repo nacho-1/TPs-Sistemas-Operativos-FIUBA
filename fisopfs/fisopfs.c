@@ -519,6 +519,80 @@ fisopfs_init(struct fuse_conn_info *conn)
 	return NULL;
 }
 
+int
+unlink_inode(const char *path, inode_t *inode)
+{
+	// Delete directory entry from parent dir
+
+	char *parent_path = malloc(strlen(path));
+	char filename[FS_FILENAME_LEN];
+	split_path(path, parent_path, filename);
+
+	inode_t *parent = find_inode(parent_path);
+	free(parent_path);
+
+
+	printf("[debug] filename: %s\n", filename);
+
+	unsigned n_dentries = parent->size / DENTRY_SIZE;
+
+	uint32_t dir_blocks = n_dentries % N_DENTRY_PER_BLOCK == 0
+	                              ? n_dentries / N_DENTRY_PER_BLOCK
+	                              : n_dentries / N_DENTRY_PER_BLOCK + 1;
+
+	for (int i = 0; i < dir_blocks; i++) {
+		dirent_t *entries = (dirent_t *) get_data_block(
+		        parent->data_blocks[parent->data_blocks[i]]);
+
+		uint32_t nentries =
+		        (i + 1) * N_DENTRY_PER_BLOCK <= n_dentries
+		                ? N_DENTRY_PER_BLOCK
+		                : n_dentries % N_DENTRY_PER_BLOCK;
+
+		int index = -1;
+		for (int j = 0; j < nentries; j++) {
+			if (inode->ino == entries[j].d_ino &&
+			    strcmp(entries[j].d_name, filename) == 0) {
+				printf("[debug] Found entry at index %d\n", j);
+				index = j;
+			}
+			if (index >= 0 && j < nentries - 1) {
+				printf("[debug] assigning entries[%d] = "
+				       "entries[%d]\n",
+				       j,
+				       j + 1);
+				entries[j] = entries[j + 1];
+			}
+		}
+		if (index > 0)
+			break;
+	}
+
+	printf("[debug] deleting entry: %s\n", filename);
+
+	parent->size -= DENTRY_SIZE;
+	print_inode(parent);
+
+	clear_bit(&inode_bitmap, inode->ino);
+
+	return 0;
+}
+
+
+static int
+fisopfs_unlink(const char *path)
+{
+	printf("[debug] fisopfs_getattr - path: %s\n", path);
+
+	inode_t *inode = find_inode(path);
+	if (!inode)
+		return -ENOENT;
+
+
+	return unlink_inode(path, inode);
+
+}
+
 static struct fuse_operations operations = {
 	.init = fisopfs_init,
 	.getattr = fisopfs_getattr,
@@ -527,6 +601,7 @@ static struct fuse_operations operations = {
 	.create = fisopfs_create,
 	.mkdir = fisopfs_mkdir,
 	.utimens = fisopfs_utimens,
+	.unlink = fisopfs_unlink,
 };
 
 
