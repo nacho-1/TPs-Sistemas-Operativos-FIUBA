@@ -43,6 +43,7 @@
 
 #define FS_FILENAME_LEN 256
 #define FS_MAX_PATH 1024
+#define MAX_LEVEL 10
 
 typedef struct {
 	uint32_t ino;

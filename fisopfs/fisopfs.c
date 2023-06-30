@@ -27,39 +27,6 @@ inode_t inodes[N_INODES];
 // data blocks
 static uint8_t data_blocks[N_DATA_BLOCKS * BLOCK_SIZE];
 
-// Particionar al string src, dividiéndolo segun el delimitador
-// delim y guardar el resultado en dest. Se devuelve la cantidad
-// de elementos de dest.
-static unsigned
-strsplit(const char *src, char *dest[], char delim)
-{
-	unsigned copystart = 0, copysize = 0, argcount = 0;
-
-	for (int i = 0; src[i] != END_STRING; i++) {
-		if (src[i] == delim) {
-			if (copysize > 0) {
-				dest[argcount] = malloc(copysize + 1);  // string + \0
-				memcpy(dest[argcount], src + copystart, copysize);
-				dest[argcount][copysize] = '\0';
-				copysize = 0;
-				argcount++;
-			}
-			copystart = i + 1;
-		} else {
-			copysize++;
-		}
-	}
-	if (copysize > 0) {
-		// Si el ultimo caracter de src no es delim, agregar la ultima particion
-		dest[argcount] = malloc(copysize + 1);
-		memcpy(dest[argcount], src + copystart, copysize);
-		dest[argcount][copysize] = '\0';
-		argcount++;
-	}
-
-	return argcount;
-}
-
 static void
 fill_stat(struct stat *st, inode_t *inode)
 {
@@ -149,22 +116,34 @@ find_inode(const char *path)
 	assert(curr_dir != NULL);
 	assert(S_ISDIR(curr_dir->mode));
 
-	if (strcmp(path, ROOT_INODE_NAME) == 0)
-		return curr_dir;
+	// Se asume que path nunca sera NULL ptr
+	size_t path_len = strlen(path);
+	if (path_len > FS_MAX_PATH || path_len == 0) return NULL;
+	if (strcmp(path, ROOT_INODE_NAME) == 0) return curr_dir;
 
-	unsigned max_tokens = strlen(path) / 2;  // puede haber este máximo de tokens
-	char **tokens = malloc(max_tokens * sizeof(char *));
-	unsigned path_level = strsplit(path, tokens, DELIM_CHAR);
+	// Se copia el path dado que strtok() modifica el src_string y 'path' es const.
+	char filepath[FS_MAX_PATH];
+	memcpy(filepath, path, path_len + 1);
+
+	char tokens[MAX_LEVEL][FS_FILENAME_LEN];
+	int path_level = 0;
+
+	char* token = strtok(filepath, "/");
+
+	if (!token) return NULL; // Ejemplo: "/////" -> NULL
+
+	memcpy(tokens[path_level++], token, strlen(token));
+	printf("		[debug] find_inode. token: %s\n", token);
+	while ((token = strtok(NULL, "/"))) {
+		memcpy(tokens[path_level++], token, strlen(token));
+		printf("		[debug] find_inode. token: %s\n", token);
+	}
 
 	for (unsigned i = 0; i < path_level; i++) {
 		curr_dir = find_in_dir(tokens[i], curr_dir);
 		if (curr_dir == NULL)
 			break;
 	}
-
-	for (unsigned i = 0; i < path_level; i++)
-		free(tokens[i]);
-	free(tokens);
 
 	return curr_dir;
 }
@@ -176,16 +155,22 @@ split_path(const char *path, char *parent_path, char *filename)
 	if (path[pathlen - 1] == DELIM_CHAR)
 		pathlen -= 1;  // no estoy seguro si esto puede pasar pero por las dudas
 
-	unsigned parent_path_len = pathlen - 1;
-	for (; parent_path_len > 0; parent_path_len--) {
-		if (path[parent_path_len] == DELIM_CHAR)
+	unsigned first_delim_pos = pathlen - 1;
+	for (; first_delim_pos > 0; first_delim_pos--) {
+		if (path[first_delim_pos] == DELIM_CHAR)
 			break;
 	}
 
-	memcpy(parent_path, path, parent_path_len);
-	parent_path[parent_path_len] = '\0';
-	memcpy(filename, path + 1 + parent_path_len, pathlen - parent_path_len - 1);
-	filename[pathlen - parent_path_len - 1] = '\0';
+	if (first_delim_pos == 0) { // es el root
+		memcpy(parent_path, path, 1);
+		parent_path[1] = '\0';
+	} else {
+		memcpy(parent_path, path, first_delim_pos);
+		parent_path[first_delim_pos] = '\0';
+	}
+
+	memcpy(filename, path + 1 + first_delim_pos, pathlen - first_delim_pos - 1);
+	filename[pathlen - first_delim_pos - 1] = '\0';
 }
 
 void
@@ -510,6 +495,9 @@ fisopfs_mkdir(const char *path, mode_t mode)
 	char parent_path[FS_MAX_PATH];
 	char dirname[FS_FILENAME_LEN];
 	split_path(path, parent_path, dirname);
+
+	printf("	[debug] parent_path: %s\n", parent_path);
+	printf("	[debug] dirname: %s\n", dirname);
 
 	inode_t *parent = find_inode(parent_path);
 	if (parent == NULL) {
