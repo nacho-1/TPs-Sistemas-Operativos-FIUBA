@@ -359,17 +359,18 @@ fisopfs_read(const char *path,
 
 	for (unsigned i = first_blk_no; i <= last_blk_no; i++) {
 		uint8_t *block = get_data_block(inode->data_blocks[i]);
+		unsigned start_offset = 0;
+		unsigned read_size = BLOCK_SIZE;
 		if (i == first_blk_no) {
-			memcpy(buffer, block + first_blk_offset, BLOCK_SIZE - first_blk_offset);
-			bytes_read += BLOCK_SIZE - first_blk_offset;
-		} else if (i == last_blk_no && i != first_blk_no) {
-			// no se si hace falta aclarar que sea distinto a first_blk_no pero por las dudas
-			memcpy(buffer + bytes_read, block, last_blk_offset);
-			bytes_read += last_blk_offset;
-		} else {
-			memcpy(buffer + bytes_read, block, BLOCK_SIZE);
-			bytes_read += BLOCK_SIZE;
+			start_offset = first_blk_offset;
+			read_size = BLOCK_SIZE - first_blk_offset;
 		}
+		if (i == last_blk_no) {
+			read_size = last_blk_offset;
+		}
+
+		memcpy(buffer + bytes_read, block + start_offset, read_size);
+		bytes_read += read_size;
 	}
 
 	inode->atim = time(NULL);
@@ -377,9 +378,10 @@ fisopfs_read(const char *path,
 	return bytes_read;
 }
 
+/*
 static int
 fisopfs_write(const char *path,
-              const char *buf,
+              const char *buffer,
               size_t size,
               off_t offset,
               struct fuse_file_info *fi)
@@ -396,8 +398,29 @@ fisopfs_write(const char *path,
 	// TODO: chequear permisos?
 	printf("	[debug] File size is %lu\n", inode->size);
 
+	if (inode->size < offset)
+		return -ERANGE;
 
+	if (size + offset > N_DATA_BLOCKS_PER_INODE * BLOCK_SIZE)
+		size = N_DATA_BLOCKS_PER_INODE * BLOCK_SIZE - offset;
+
+	if (size == 0)
+		return 0;
+
+	unsigned first_blk_no = offset / BLOCK_SIZE;
+	unsigned first_blk_offset = offset % BLOCK_SIZE;
+	unsigned last_blk_no = (size + offset) / BLOCK_SIZE;
+	unsigned last_blk_offset = (size + offset) % BLOCK_SIZE;
+	unsigned bytes_written = 0;
+
+	for (unsigned i = first_blk_no; i <= last_blk_no; i++) {
+		uint8_t *block = get_data_block(inode->data_blocks[i]);
+		if (i == first_blk_no) {
+			memcpy(block + first_blk_offset, buffer, )
+		}
+	}
 }
+ */
 
 static int
 fisopfs_create(const char *path, mode_t mode, struct fuse_file_info *info)
