@@ -189,8 +189,10 @@ split_path(const char *path, char *parent_path, char *filename)
 void
 print_inode(inode_t *inode)
 {
+	printf("\n");
 	printf("	[debug] Inode Information\n");
 	printf("	--------------------------------\n");
+	printf("	[debug] i->ino:			%u\n", inode->ino);
 	printf("	[debug] i->mode:		%u\n", inode->mode);
 	printf("	[debug] i->uid;:		%u\n", inode->uid);
 	printf("	[debug] i->gid:			%u\n", inode->gid);
@@ -198,7 +200,8 @@ print_inode(inode_t *inode)
 	printf("	[debug] i->n_blocks:		%u\n", inode->n_blocks);
 	printf("	[debug] i->atim;:		%lu\n", inode->atim);
 	printf("	[debug] i->mtim:		%lu\n", inode->mtim);
-	printf("	[debug] i->ctim:		%lu\n\n", inode->ctim);
+	printf("	[debug] i->ctim:		%lu\n", inode->ctim);
+	printf("	[debug] i->parent:		%u\n\n", inode->parent);
 }
 
 static inode_t *
@@ -477,7 +480,7 @@ fisopfs_utimens(const char *path, const struct timespec tv[2])
 static void *
 fisopfs_init(struct fuse_conn_info *conn)
 {
-	printf("[debug] fisopfs init\n");
+	printf("[debug] fisopfs_init\n");
 	printf("	[debug] There's %u blocks of %u bytes each\n", N_BLOCKS, BLOCK_SIZE);
 	printf("	[debug] Inode size is %lu bytes aligned to %u\n", sizeof(inode_t), INODE_SIZE);
 	printf("	[debug] An inode block contains %u inodes \n", BLOCK_SIZE / INODE_SIZE);
@@ -499,6 +502,11 @@ fisopfs_init(struct fuse_conn_info *conn)
 	superblock.n_dirs = 1;  // One dir: root
 	superblock.n_files = 0;
 	superblock.root_ino = root->ino;
+
+	printf("	[debug] Filesystem summary:\n");
+	printf("	[debug] There's %u directories\n", superblock.n_dirs);
+	printf("	[debug] There's %u files\n", superblock.n_files);
+	printf("	[debug] Directory entry size (aligned): %u\n", DENTRY_SIZE);
 
 	return NULL;
 }
