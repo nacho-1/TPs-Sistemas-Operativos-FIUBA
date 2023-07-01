@@ -137,15 +137,15 @@ find_inode(const char *path)
 
 	// Los tokens devueltos por strtok terminan en \0
 	memcpy(tokens[path_level++], token, strlen(token) + 1);
-	printf("	[debug] find_inode. token: %s\n", token);
+	//printf("	[debug] find_inode. token: %s\n", token);
 
 	while ((token = strtok(NULL, "/"))) {
 		if (path_level > MAX_LEVEL) {
-			printf("	[debug] find_inode. Max level reached.\n");
+			//printf("	[debug] find_inode. Max level reached.\n");
 			return NULL;
 		}
 		memcpy(tokens[path_level++], token, strlen(token) + 1);
-		printf("	[debug] find_inode. token: %s\n", token);
+		//printf("	[debug] find_inode. token: %s\n", token);
 	}
 
 	for (unsigned i = 0; i < path_level; i++) {
@@ -264,6 +264,72 @@ insert_dentry(inode_t *parent, uint32_t ino, const char *d_name)
 	parent->atim = time(NULL);
 	parent->mtim = parent->atim;
 	return 0;
+}
+
+static int
+write_file(inode_t *inode,
+           const char *buffer,
+           size_t size,
+           off_t offset)
+{
+	printf("	[debug] Writing file...\n");
+
+	if (inode == NULL)
+		return -ENOENT;
+
+	if (S_ISDIR(inode->mode))
+		return -EISDIR;
+
+	printf("	[debug] File size is: %lu\n", inode->size);
+
+	if (inode->size < offset)
+		return -EFBIG;
+
+	if (size + offset > N_DATA_BLOCKS_PER_INODE * BLOCK_SIZE)
+		return -EFBIG;
+
+	if (size == 0)
+		return 0;
+
+	unsigned first_blk_no = offset / BLOCK_SIZE;
+	unsigned first_blk_offset = offset % BLOCK_SIZE;
+	unsigned last_blk_no = (size + offset) / BLOCK_SIZE;
+	unsigned last_blk_offset = (size + offset) % BLOCK_SIZE;
+	unsigned bytes_written = 0;
+
+	for (unsigned i = first_blk_no; i <= last_blk_no; i++) {
+		uint8_t *block = NULL;
+		if (i < inode->n_blocks) {
+			block = get_data_block(inode->data_blocks[i]);
+		} else {
+			uint32_t block_no;
+			block = init_data_block(&block_no);
+			if (block == NULL)  // TODO: no hay mas espacio en el disco. Que hacemos en este caso?
+				return bytes_written;
+			inode->data_blocks[inode->n_blocks] = block_no;
+			inode->n_blocks++;
+			printf("	[debug] Initialized data block for inode\n");
+		}
+
+		unsigned start_offset = 0;
+		unsigned write_size = BLOCK_SIZE;
+		if (i == first_blk_no) {
+			start_offset = first_blk_offset;
+			write_size = BLOCK_SIZE - first_blk_offset;
+		}
+		if (i == last_blk_no)
+			write_size = last_blk_offset - start_offset;
+
+		memcpy(block + start_offset, buffer + bytes_written, write_size);
+		printf("	[debug] Wrote %u bytes to file\n", write_size);
+		bytes_written += write_size;
+		inode->size = inode->size > (offset + bytes_written) ? inode->size : (offset + bytes_written);
+		printf("	[debug] File size is: %lu\n", inode->size);
+		inode->atim = time(NULL);
+		inode->mtim = inode->atim;
+	}
+
+	return bytes_written;
 }
 
 static int
@@ -389,58 +455,56 @@ fisopfs_write(const char *path,
 	if (S_ISDIR(inode->mode))
 		return -EISDIR;
 
-	// TODO: chequear permisos?
-	printf("	[debug] File size is %lu\n", inode->size);
+	// TODO: chequear permisos
+	return write_file(inode, buffer, size, offset);
+}
 
-	if (inode->size < offset)
-		return -ERANGE;
+static int
+fisopfs_truncate(const char *path, off_t length)
+{
+	printf("[debug] fisopfs_truncate - path: %s, length: %lu\n", path, length);
 
-	if (size + offset > N_DATA_BLOCKS_PER_INODE * BLOCK_SIZE)
-		size = N_DATA_BLOCKS_PER_INODE * BLOCK_SIZE - offset;
+	if (length > N_DATA_BLOCKS_PER_INODE * BLOCK_SIZE)
+		return -EFBIG;
 
-	if (size == 0)
-		return 0;
+	inode_t *inode = find_inode(path);
+	if (inode == NULL)
+		return -ENOENT;
 
-	unsigned first_blk_no = offset / BLOCK_SIZE;
-	unsigned first_blk_offset = offset % BLOCK_SIZE;
-	unsigned last_blk_no = (size + offset) / BLOCK_SIZE;
-	unsigned last_blk_offset = (size + offset) % BLOCK_SIZE;
-	unsigned bytes_written = 0;
+	if (S_ISDIR(inode->mode))
+		return -EISDIR;
 
-	for (unsigned i = first_blk_no; i <= last_blk_no; i++) {
-		uint8_t *block = NULL;
-		if (i < inode->n_blocks) {
-			block = get_data_block(inode->data_blocks[i]);
-		} else {
-			uint32_t block_no;
-			block = init_data_block(&block_no);
-			if (block == NULL)  // TODO: no hay mas espacio en el disco. Que hacemos en este caso?
-				return bytes_written;
-			inode->data_blocks[inode->n_blocks] = block_no;
-			inode->n_blocks++;
-			printf("	[debug] Initialized data block for inode\n");
+	// TODO: chequear permisos
+	printf("	[debug] File size is: %lu\n", inode->size);
+	int ret;
+
+	if (length == inode->size) {
+		ret = 0;
+	} else if (length > inode->size) {
+		char *buffer = malloc(length - inode->size);
+		memset(buffer, 0, length - inode->size);
+		ret = write_file(inode, buffer, length - inode->size, inode->size);
+		free(buffer);
+		if (ret >= 0)
+			ret = 0;
+	} else { // length < inode->size
+		unsigned last_blk_no = length / BLOCK_SIZE;
+		unsigned last_blk_offset = length % BLOCK_SIZE;
+		unsigned n_blocks = inode->n_blocks;
+		for (unsigned i = last_blk_no; i < n_blocks; i++) {
+			if (i == last_blk_no && last_blk_offset > 0)
+				continue;
+			uint32_t block_no = inode->data_blocks[i];
+			clear_bit(&data_bitmap, (int) block_no);
+			inode->n_blocks--;
 		}
-
-		unsigned start_offset = 0;
-		unsigned write_size = BLOCK_SIZE;
-		if (i == first_blk_no) {
-			start_offset = first_blk_offset;
-			write_size = BLOCK_SIZE - first_blk_offset;
-		}
-		if (i == last_blk_no)
-			write_size = last_blk_offset - start_offset;
-
-		memcpy(block + start_offset, buffer + bytes_written, write_size);
-		printf("	[debug] Wrote %u bytes to file\n", write_size);
-		bytes_written += write_size;
-		inode->size = inode->size > (offset + bytes_written) ? inode->size : (offset + bytes_written);
-		printf("	[debug] File size is: %lu\n", inode->size);
-		inode->atim = time(NULL);
-		inode->mtim = inode->atim;
+		inode->size = length;
+		inode->ctim = time(NULL);
+		inode->mtim = inode->ctim;
+		ret = 0;
 	}
 
-	assert(bytes_written == size);
-	return bytes_written;
+	return ret;
 }
 
 static int
@@ -448,7 +512,7 @@ fisopfs_create(const char *path, mode_t mode, struct fuse_file_info *info)
 {
 	printf("[debug] fisopfs_create - path: %s\n", path);
 	if (strlen(path) > FS_MAX_PATH) {
-		printf("[debug] Path is too long.\n");
+		printf("	[debug] Path is too long.\n");
 		return -ENAMETOOLONG;
 	}
 	if (get_free_bit(&data_bitmap) < 0) {
@@ -694,6 +758,7 @@ static struct fuse_operations operations = {
 	.readdir = fisopfs_readdir,
 	.read = fisopfs_read,
 	.write = fisopfs_write,
+	.truncate = fisopfs_truncate,
 	.create = fisopfs_create,
 	.mkdir = fisopfs_mkdir,
 	.utimens = fisopfs_utimens,
