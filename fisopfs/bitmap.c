@@ -19,7 +19,7 @@ get_bit(bitmap_t *bitmap, int n)
 	return bit != 0;
 }
 
-long
+int
 get_free_bit(bitmap_t *bitmap)
 {
 	uint32_t bitno;

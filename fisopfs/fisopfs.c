@@ -118,8 +118,10 @@ find_inode(const char *path)
 
 	// Se asume que path nunca sera NULL ptr
 	size_t path_len = strlen(path);
-	if (path_len > FS_MAX_PATH || path_len == 0) return NULL;
-	if (strcmp(path, ROOT_INODE_NAME) == 0) return curr_dir;
+	if (path_len > FS_MAX_PATH || path_len == 0)
+		return NULL;
+	if (strcmp(path, ROOT_INODE_NAME) == 0)
+		return curr_dir;
 
 	// Se copia el path dado que strtok() modifica el src_string y 'path' es const.
 	char filepath[FS_MAX_PATH];
@@ -128,15 +130,20 @@ find_inode(const char *path)
 	char tokens[MAX_LEVEL][FS_FILENAME_LEN];
 	int path_level = 0;
 
-	char* token = strtok(filepath, "/");
+	char *token = strtok(filepath, "/");
 
-	if (!token) return NULL; // Ejemplo: "/////" -> NULL
+	if (!token)
+		return NULL;  // Ejemplo: "/////" -> NULL
 
-  	// Los tokens devueltos por strtok terminan en \0
+	// Los tokens devueltos por strtok terminan en \0
 	memcpy(tokens[path_level++], token, strlen(token) + 1);
 	printf("		[debug] find_inode. token: %s\n", token);
 
 	while ((token = strtok(NULL, "/"))) {
+		if (path_level > MAX_LEVEL) {
+			printf("		[debug] find_inode. Max level reached.\n");
+			return NULL;
+		}
 		memcpy(tokens[path_level++], token, strlen(token) + 1);
 		printf("		[debug] find_inode. token: %s\n", token);
 	}
@@ -163,7 +170,7 @@ split_path(const char *path, char *parent_path, char *filename)
 			break;
 	}
 
-	if (first_delim_pos == 0) { // es el root
+	if (first_delim_pos == 0) {  // es el root
 		memcpy(parent_path, path, 1);
 		parent_path[1] = '\0';
 	} else {
@@ -407,7 +414,7 @@ fisopfs_write(const char *path,
 		} else {
 			uint32_t block_no;
 			block = init_data_block(&block_no);
-			if (block == NULL) // TODO: no hay mas espacio en el disco. Que hacemos en este caso?
+			if (block == NULL)  // TODO: no hay mas espacio en el disco. Que hacemos en este caso?
 				return bytes_written;
 			inode->data_blocks[inode->n_blocks] = block_no;
 			inode->n_blocks++;
@@ -440,6 +447,10 @@ static int
 fisopfs_create(const char *path, mode_t mode, struct fuse_file_info *info)
 {
 	printf("[debug] fisopfs_create - path: %s\n", path);
+	if (strlen(path) > FS_MAX_PATH) {
+		printf("[debug] Path is too long.\n");
+		return -ENAMETOOLONG;
+	}
 	if (get_free_bit(&data_bitmap) < 0) {
 		printf("	[debug] No space available\n");
 		return -ENOMEM;
@@ -453,9 +464,14 @@ fisopfs_create(const char *path, mode_t mode, struct fuse_file_info *info)
 	char filename[FS_FILENAME_LEN];
 	split_path(path, parent_path, filename);
 
+	if (strlen(filename) > FS_FILENAME_LEN) {
+		printf("	[debug] File name too long\n");
+		return -ENAMETOOLONG;
+	}
+
 	inode_t *parent = find_inode(parent_path);
 	if (parent == NULL) {
-		printf("	[debug] Invalid path\n");
+		printf("	[debug] Invalid path or exceeds max level.\n");
 		return -ENOENT;
 	}
 	if (!S_ISDIR(parent->mode)) {
@@ -485,6 +501,10 @@ static int
 fisopfs_mkdir(const char *path, mode_t mode)
 {
 	printf("[debug] fisopfs_mkdir - path: %s\n", path);
+	if (strlen(path) > FS_MAX_PATH) {
+		printf("[debug] Path is too long.\n");
+		return -ENAMETOOLONG;
+	}
 	if (get_free_bit(&data_bitmap) < 0) {
 		printf("	[debug] No space available\n");
 		return -ENOMEM;
@@ -500,10 +520,14 @@ fisopfs_mkdir(const char *path, mode_t mode)
 
 	printf("	[debug] parent_path: %s\n", parent_path);
 	printf("	[debug] dirname: %s\n", dirname);
+	if (strlen(dirname) > FS_FILENAME_LEN) {
+		printf("	[debug] File name too long\n");
+		return -ENAMETOOLONG;
+	}
 
 	inode_t *parent = find_inode(parent_path);
 	if (parent == NULL) {
-		printf("	[debug] Invalid path\n");
+		printf("	[debug] Invalid path or exceeds max level\n");
 		return -ENOENT;
 	}
 	if (!S_ISDIR(parent->mode)) {
@@ -519,7 +543,7 @@ fisopfs_mkdir(const char *path, mode_t mode)
 	inode_t *inode = init_inode(mode);
 	if (inode == NULL) {
 		printf("	[debug] Inode table is full\n");
-		return -ENOMEM;
+		return -EDQUOT;
 	}
 
 	inode->parent = parent->ino;

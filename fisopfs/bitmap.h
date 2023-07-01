@@ -26,6 +26,6 @@ void clear_bit(bitmap_t *bitmap, int n);
 
 int get_bit(bitmap_t *bitmap, int n);
 
-long get_free_bit(bitmap_t *bitmap);
+int get_free_bit(bitmap_t *bitmap);
 
 #endif  // _BITMAP_H_
