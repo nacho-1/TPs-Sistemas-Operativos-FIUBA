@@ -115,8 +115,8 @@ find_inode(const char *path)
 	inode_t *curr_dir = get_inode(superblock.root_ino);
 	assert(curr_dir != NULL);
 	assert(S_ISDIR(curr_dir->mode));
-
-	// Se asume que path nunca sera NULL ptr
+	assert(path != NULL);
+	
 	size_t path_len = strlen(path);
 	if (path_len > FS_MAX_PATH || path_len == 0)
 		return NULL;
@@ -137,15 +137,15 @@ find_inode(const char *path)
 
 	// Los tokens devueltos por strtok terminan en \0
 	memcpy(tokens[path_level++], token, strlen(token) + 1);
-	printf("		[debug] find_inode. token: %s\n", token);
+	printf("	[debug] find_inode. token: %s\n", token);
 
 	while ((token = strtok(NULL, "/"))) {
 		if (path_level > MAX_LEVEL) {
-			printf("		[debug] find_inode. Max level reached.\n");
+			printf("	[debug] find_inode. Max level reached.\n");
 			return NULL;
 		}
 		memcpy(tokens[path_level++], token, strlen(token) + 1);
-		printf("		[debug] find_inode. token: %s\n", token);
+		printf("	[debug] find_inode. token: %s\n", token);
 	}
 
 	for (unsigned i = 0; i < path_level; i++) {
