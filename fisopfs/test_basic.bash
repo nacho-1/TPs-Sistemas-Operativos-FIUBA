@@ -11,7 +11,7 @@ trim() {
     echo -n "$var"
 }
 
-cd $FS_MOUNT_POINT
+cd $FS_MOUNT_POINT || exit
 
 
 testName="test00WritesFileWithEchoAndReadsWithCat"
@@ -21,7 +21,7 @@ echo "hola mundo" > hola.txt
 expected="hola mundo"
 actual=$(cat hola.txt)
 
-if [[ $expected = $actual ]]; then
+if [[ $expected == "$actual" ]]; then
   echo -e "${GREEN}[OK]${NO_COLOR} ${testName}"
 else
   echo -e "${RED}[ERROR]${NO_COLOR} ${testName}
@@ -38,7 +38,7 @@ mkdir mydir
 expected="  File: mydir"
 actual=$(stat mydir | grep 'File')
 
-if [[ $expected = $actual ]]; then
+if [[ $expected == "$actual" ]]; then
   echo -e "${GREEN}[OK]${NO_COLOR} ${testName}"
 else
   echo -e "${RED}[ERROR]${NO_COLOR} ${testName}
@@ -56,7 +56,7 @@ rmdir mydir2
 notExpected="  File: mydir2"
 actual=$(stat mydir2 | grep 'File')
 
-if [[ $notExpected != $actual ]]; then
+if [[ $notExpected != "$actual" ]]; then
   echo -e "${GREEN}[OK]${NO_COLOR} ${testName}"
 else
   echo -e "${RED}[ERROR]${NO_COLOR} ${testName}
@@ -75,7 +75,7 @@ actual=$(stat file.txt | grep 'Size'| cut -f 1)
 expected=$(trim "$expected")
 actual=$(trim "$actual")
 
-if [[ $expected = $actual ]]; then
+if [[ $expected == "$actual" ]]; then
   echo -e "${GREEN}[OK]${NO_COLOR} ${testName}"
 else
   echo -e "${RED}[ERROR]${NO_COLOR} ${testName}
@@ -97,7 +97,7 @@ actual=$(stat file2.txt | grep 'Size'| cut -f 1)
 expected=$(trim "$expected")
 actual=$(trim "$actual")
 
-if [[ $expected = $actual ]]; then
+if [[ $expected = "$actual" ]]; then
   echo -e "${GREEN}[OK]${NO_COLOR} ${testName}"
 else
   echo -e "${RED}[ERROR]${NO_COLOR} ${testName}
@@ -116,7 +116,7 @@ cat file3.txt>>file4.txt
 expected="texto a copiar"
 actual=$(cat file4.txt)
 
-if [[ $expected = $actual ]]; then
+if [[ $expected == "$actual" ]]; then
   echo -e "${GREEN}[OK]${NO_COLOR} ${testName}"
 else
   echo -e "${RED}[ERROR]${NO_COLOR} ${testName}
@@ -135,11 +135,11 @@ rm file5
 not_expected="  File: file5"
 actual=$(stat file5 | grep 'File:')
 
-if [[ $notExpected != $actual ]]; then
+if [[ $not_expected != "$actual" ]]; then
   echo -e "${GREEN}[OK]${NO_COLOR} ${testName}"
 else
   echo -e "${RED}[ERROR]${NO_COLOR} ${testName}
-Not Expected: ${notExpected}
+Not Expected: ${not_expected}
          Got: ${actual}"
 fi
 
@@ -152,7 +152,7 @@ echo "texto que sobreescribe" > file6.txt
 expected="texto que sobreescribe"
 actual=$(cat file6.txt)
 
-if [[ $expected = $actual ]]; then
+if [[ $expected == "$actual" ]]; then
   echo -e "${GREEN}[OK]${NO_COLOR} ${testName}"
 else
   echo -e "${RED}[ERROR]${NO_COLOR} ${testName}
@@ -174,7 +174,7 @@ cd .. || exit
 expected="mydir5"
 actual=$(ls)
 
-if [[ $expected = $actual ]]; then
+if [[ $expected == "$actual" ]]; then
   echo -e "${GREEN}[OK]${NO_COLOR} ${testName}"
 else
   echo -e "${RED}[ERROR]${NO_COLOR} ${testName}
