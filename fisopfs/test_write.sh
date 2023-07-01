@@ -15,7 +15,41 @@ actual=$(cat hola.txt)
 if [[ $expected = $actual ]]; then
   echo -e "${GREEN}[OK]${NO_COLOR} ${testName}"
 else
-  echo -e "${RED}[ERROR]${NO_COLOR} ${testName} expected: ${expected} but got: ${actual}."
+  echo -e "${RED}[ERROR]${NO_COLOR} ${testName}
+expected: ${expected} 
+but got: ${actual}"
 fi
 
 rm hola.txt
+
+testName="test01MkdirThenStatNameShouldBeCorrect"
+
+mkdir mydir
+expected="  File: mydir"
+actual=$(stat mydir | grep File)
+
+if [[ $expected = $actual ]]; then
+  echo -e "${GREEN}[OK]${NO_COLOR} ${testName}"
+else
+  echo -e "${RED}[ERROR]${NO_COLOR} ${testName}
+expected: ${expected}
+but got: ${actual}"
+fi
+
+rmdir mydir
+
+testName="test02MkdirThenRmdirAndStatNameShouldNotBeCorrect"
+
+mkdir mydir2
+rmdir mydir2
+notExpected="  File: mydir2"
+actual=$(stat mydir2 | grep File)
+
+if [[ $notExpected != $actual ]]; then
+  echo -e "${GREEN}[OK]${NO_COLOR} ${testName}"
+else
+  echo -e "${RED}[ERROR]${NO_COLOR} ${testName}
+notExpected: ${notExpected}
+but got: ${actual}"
+fi
+
