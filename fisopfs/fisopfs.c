@@ -335,7 +335,7 @@ write_file(inode_t *inode,
 static int
 fisopfs_getattr(const char *path, struct stat *st)
 {
-	printf("[debug] fisopfs_getattr - path: %s\n", path);
+	printf("\n[debug] fisopfs_getattr - path: %s\n", path);
 
 	inode_t *inode = find_inode(path);
 	if (inode == NULL) {
@@ -355,7 +355,7 @@ fisopfs_readdir(const char *path,
                 off_t offset,
                 struct fuse_file_info *fi)
 {
-	printf("[debug] fisopfs_readdir - path: %s\n", path);
+	printf("\n[debug] fisopfs_readdir - path: %s\n", path);
 
 	inode_t *dir = find_inode(path);
 	if (dir == NULL)
@@ -392,7 +392,7 @@ fisopfs_read(const char *path,
              off_t offset,
              struct fuse_file_info *fi)
 {
-	printf("[debug] fisopfs_read - path: %s, size: %lu, offset: %lu\n", path, size, offset);
+	printf("\n[debug] fisopfs_read - path: %s, size: %lu, offset: %lu\n", path, size, offset);
 
 	inode_t *inode = find_inode(path);
 	if (inode == NULL)
@@ -446,7 +446,7 @@ fisopfs_write(const char *path,
               off_t offset,
               struct fuse_file_info *fi)
 {
-	printf("[debug] fisopfs_write - path: %s, size: %lu, offset: %lu\n", path, size, offset);
+	printf("\n[debug] fisopfs_write - path: %s, size: %lu, offset: %lu\n", path, size, offset);
 
 	inode_t *inode = find_inode(path);
 	if (inode == NULL)
@@ -510,7 +510,7 @@ fisopfs_truncate(const char *path, off_t length)
 static int
 fisopfs_create(const char *path, mode_t mode, struct fuse_file_info *info)
 {
-	printf("[debug] fisopfs_create - path: %s\n", path);
+	printf("\n[debug] fisopfs_create - path: %s\n", path);
 	if (strlen(path) > FS_MAX_PATH) {
 		printf("	[debug] Path is too long.\n");
 		return -ENAMETOOLONG;
@@ -564,7 +564,7 @@ fisopfs_create(const char *path, mode_t mode, struct fuse_file_info *info)
 static int
 fisopfs_mkdir(const char *path, mode_t mode)
 {
-	printf("[debug] fisopfs_mkdir - path: %s\n", path);
+	printf("\n[debug] fisopfs_mkdir - path: %s\n", path);
 	if (strlen(path) > FS_MAX_PATH) {
 		printf("[debug] Path is too long.\n");
 		return -ENAMETOOLONG;
@@ -620,7 +620,7 @@ fisopfs_mkdir(const char *path, mode_t mode)
 static int
 fisopfs_utimens(const char *path, const struct timespec tv[2])
 {
-	printf("[debug] fisopfs_utimens - path: %s\n", path);
+	printf("\n[debug] fisopfs_utimens - path: %s\n", path);
 
 	inode_t *inode = find_inode(path);
 	if (!inode)
@@ -639,7 +639,7 @@ fisopfs_utimens(const char *path, const struct timespec tv[2])
 static void *
 fisopfs_init(struct fuse_conn_info *conn)
 {
-	printf("[debug] fisopfs_init\n");
+	printf("\n[debug] fisopfs_init\n");
 	printf("	[debug] There's %u blocks of %u bytes each\n", N_BLOCKS, BLOCK_SIZE);
 	printf("	[debug] Inode size is %lu bytes aligned to %u\n", sizeof(inode_t), INODE_SIZE);
 	printf("	[debug] An inode block contains %u inodes \n", BLOCK_SIZE / INODE_SIZE);
@@ -742,7 +742,7 @@ unlink_inode(const char *path, inode_t *inode)
 static int
 fisopfs_unlink(const char *path)
 {
-	printf("[debug] fisopfs_unlink - path: %s\n", path);
+	printf("\n[debug] fisopfs_unlink - path: %s\n", path);
 
 	inode_t *inode = find_inode(path);
 	if (!inode)
