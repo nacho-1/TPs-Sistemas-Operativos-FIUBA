@@ -116,7 +116,7 @@ find_inode(const char *path)
 	assert(curr_dir != NULL);
 	assert(S_ISDIR(curr_dir->mode));
 	assert(path != NULL);
-	
+
 	size_t path_len = strlen(path);
 	if (path_len > FS_MAX_PATH || path_len == 0)
 		return NULL;
@@ -164,22 +164,22 @@ split_path(const char *path, char *parent_path, char *filename)
 	if (path[pathlen - 1] == DELIM_CHAR)
 		pathlen -= 1;  // no estoy seguro si esto puede pasar pero por las dudas
 
-	unsigned first_delim_pos = pathlen - 1;
-	for (; first_delim_pos > 0; first_delim_pos--) {
-		if (path[first_delim_pos] == DELIM_CHAR)
+	unsigned last_delim_pos = pathlen - 1;
+	for (; last_delim_pos > 0; last_delim_pos--) {
+		if (path[last_delim_pos] == DELIM_CHAR)
 			break;
 	}
 
-	if (first_delim_pos == 0) {  // es el root
+	if (last_delim_pos == 0) {  // es el root
 		memcpy(parent_path, path, 1);
 		parent_path[1] = '\0';
 	} else {
-		memcpy(parent_path, path, first_delim_pos);
-		parent_path[first_delim_pos] = '\0';
+		memcpy(parent_path, path, last_delim_pos);
+		parent_path[last_delim_pos] = '\0';
 	}
 
-	memcpy(filename, path + 1 + first_delim_pos, pathlen - first_delim_pos - 1);
-	filename[pathlen - first_delim_pos - 1] = '\0';
+	memcpy(filename, path + 1 + last_delim_pos, pathlen - last_delim_pos - 1);
+	filename[pathlen - last_delim_pos - 1] = '\0';
 }
 
 void
