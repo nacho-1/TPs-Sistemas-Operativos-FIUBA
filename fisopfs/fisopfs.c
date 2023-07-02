@@ -137,15 +137,15 @@ find_inode(const char *path)
 
 	// Los tokens devueltos por strtok terminan en \0
 	memcpy(tokens[path_level++], token, strlen(token) + 1);
-	//printf("	[debug] find_inode. token: %s\n", token);
+	// printf("	[debug] find_inode. token: %s\n", token);
 
 	while ((token = strtok(NULL, "/"))) {
 		if (path_level > MAX_LEVEL) {
-			//printf("	[debug] find_inode. Max level reached.\n");
+			// printf("	[debug] find_inode. Max level reached.\n");
 			return NULL;
 		}
 		memcpy(tokens[path_level++], token, strlen(token) + 1);
-		//printf("	[debug] find_inode. token: %s\n", token);
+		// printf("	[debug] find_inode. token: %s\n", token);
 	}
 
 	for (unsigned i = 0; i < path_level; i++) {
@@ -339,9 +339,8 @@ write_file(inode_t *inode,
 static void
 shrink_file(inode_t *inode, off_t length)
 {
-	if (inode == NULL
-	    || S_ISDIR(inode->mode)	// Solamente archivos tipo file
-	    || inode->size <= length) {// Solamente para encoger archivos, ver fisopfs_truncate
+	if (inode == NULL || S_ISDIR(inode->mode)  // Solamente archivos tipo file
+	    || inode->size <= length) {            // Solamente para encoger archivos, ver fisopfs_truncate
 		printf("	[debug] Bad shrink\n");
 		return;
 	}
