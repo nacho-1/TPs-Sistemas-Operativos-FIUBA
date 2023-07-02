@@ -332,6 +332,35 @@ write_file(inode_t *inode,
 	return bytes_written;
 }
 
+/*
+ * Disminuye el tamaño del archivo asociado al inodo
+ * al tamaño length
+ */
+static void
+shrink_file(inode_t *inode, off_t length)
+{
+	if (inode == NULL
+	    || S_ISDIR(inode->mode)	// Solamente archivos tipo file
+	    || inode->size <= length) {// Solamente para encoger archivos, ver fisopfs_truncate
+		printf("	[debug] Bad shrink\n");
+		return;
+	}
+
+	unsigned last_blk_no = length / BLOCK_SIZE;
+	unsigned last_blk_offset = length % BLOCK_SIZE;
+	unsigned n_blocks = inode->n_blocks;
+	for (unsigned i = last_blk_no; i < n_blocks; i++) {
+		if (i == last_blk_no && last_blk_offset > 0)
+			continue;
+		uint32_t block_no = inode->data_blocks[i];
+		clear_bit(&data_bitmap, (int) block_no);
+		inode->n_blocks--;
+	}
+	inode->size = length;
+	inode->ctim = time(NULL);
+	inode->mtim = inode->ctim;
+}
+
 static int
 fisopfs_getattr(const char *path, struct stat *st)
 {
@@ -462,7 +491,7 @@ fisopfs_write(const char *path,
 static int
 fisopfs_truncate(const char *path, off_t length)
 {
-	printf("[debug] fisopfs_truncate - path: %s, length: %lu\n", path, length);
+	printf("\n[debug] fisopfs_truncate - path: %s, length: %lu\n", path, length);
 
 	if (length > N_DATA_BLOCKS_PER_INODE * BLOCK_SIZE)
 		return -EFBIG;
@@ -488,19 +517,7 @@ fisopfs_truncate(const char *path, off_t length)
 		if (ret >= 0)
 			ret = 0;
 	} else {  // length < inode->size
-		unsigned last_blk_no = length / BLOCK_SIZE;
-		unsigned last_blk_offset = length % BLOCK_SIZE;
-		unsigned n_blocks = inode->n_blocks;
-		for (unsigned i = last_blk_no; i < n_blocks; i++) {
-			if (i == last_blk_no && last_blk_offset > 0)
-				continue;
-			uint32_t block_no = inode->data_blocks[i];
-			clear_bit(&data_bitmap, (int) block_no);
-			inode->n_blocks--;
-		}
-		inode->size = length;
-		inode->ctim = time(NULL);
-		inode->mtim = inode->ctim;
+		shrink_file(inode, length);
 		ret = 0;
 	}
 
