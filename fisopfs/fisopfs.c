@@ -644,8 +644,11 @@ static void *
 fisopfs_init(struct fuse_conn_info *conn)
 {
 	char name[FS_FILENAME_LEN];
+	printf("Enter a name for file system, must finish with .fisopfs");
 	fgets(name, FS_FILENAME_LEN, stdin);
-	strcpy(file_name, name);
+	if (strlen(name) != 0 && (strstr(name, ".fisopfs") != 0)) {
+		strcpy(file_name, name);
+	}
 	printf(name);
 	printf(file_name);
 
