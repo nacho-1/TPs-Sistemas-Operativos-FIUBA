@@ -343,10 +343,10 @@ load_file_system(FILE *file)
 	if (fread(&superblock, sizeof(superblock_t), 1, file) <= 0) {
 		printf("error reading loading file: %s", file_name);
 	}
-	if (fread(&inode_bitmap, sizeof(bitmap_t), 1, file) <= 0) {
+	if (fread(&__inode_bitmap, sizeof(__inode_bitmap), 1, file) <= 0) {
 		printf("error reading loading file: %s", file_name);
 	}
-	if (fread(&data_bitmap, sizeof(bitmap_t), 1, file) <= 0) {
+	if (fread(&__data_bitmap, sizeof(__data_bitmap), 1, file) <= 0) {
 		printf("error reading loading file: %s", file_name);
 	};
 	if (fread(&inodes, sizeof(inode_t), 1, file) <= 0) {
@@ -365,8 +365,8 @@ save_file_system()
 	FILE *file = fopen(file_name, "w+");
 
 	fwrite(&superblock, sizeof(superblock_t), 1, file);
-	fwrite(&inode_bitmap, sizeof(bitmap_t), 1, file);
-	fwrite(&data_bitmap, sizeof(bitmap_t), 1, file);
+	fwrite(&__inode_bitmap, sizeof(__inode_bitmap), 1, file);
+	fwrite(&__data_bitmap, sizeof(__data_bitmap), 1, file);
 	fwrite(&inodes, sizeof(inode_t), 1, file);
 	fwrite(&data_blocks, sizeof(data_blocks), 1, file);
 
@@ -724,12 +724,12 @@ fisopfs_init(struct fuse_conn_info *conn)
 		superblock.n_files = 0;
 		superblock.root_ino = root->ino;
 
-		printf("	[debug] Filesystem summary:\n");
-		printf("	[debug] There's %u directories\n", superblock.n_dirs);
-		printf("	[debug] There's %u files\n", superblock.n_files);
-		printf("	[debug] Directory entry size (aligned): %u\n", DENTRY_SIZE);
 
 	}
+	printf("	[debug] Filesystem summary:\n");
+	printf("	[debug] There's %u directories\n", superblock.n_dirs);
+	printf("	[debug] There's %u files\n", superblock.n_files);
+	printf("	[debug] Directory entry size (aligned): %u\n", DENTRY_SIZE);
 
 	return NULL;
 }
