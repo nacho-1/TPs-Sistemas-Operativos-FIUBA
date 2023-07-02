@@ -339,6 +339,7 @@ write_file(inode_t *inode,
 void
 load_file_system(FILE *file)
 {
+	printf("	[debug] loading file system\n");
 	if (fread(&superblock, sizeof(superblock_t), 1, file) <= 0) {
 		printf("error reading loading file: %s", file_name);
 	}
@@ -348,15 +349,33 @@ load_file_system(FILE *file)
 	if (fread(&data_bitmap, sizeof(bitmap_t), 1, file) <= 0) {
 		printf("error reading loading file: %s", file_name);
 	};
-	if (fread(inodes, sizeof(inode_t), N_INODES, file) <= 0) {
+	if (fread(&inodes, sizeof(inode_t), N_INODES, file) <= 0) {
 		printf("error reading loading file: %s", file_name);
 	}
-	if (fread(data_blocks, sizeof(data_blocks), N_BLOCKS, file) <= 0) {
+	if (fread(&data_blocks, sizeof(data_blocks), N_BLOCKS, file) <= 0) {
 		printf("error reading loading file: %s", file_name);
 	}
 
 	fclose(file);
 }
+
+
+void
+save_file_system()
+{
+	printf("	[debug] saving file system\n");
+	FILE *file = fopen(file_name, "w+");
+
+	fwrite(&superblock, sizeof(superblock_t), 1, file);
+	fwrite(&inode_bitmap, sizeof(bitmap_t), 1, file);
+	fwrite(&data_bitmap, sizeof(bitmap_t), 1, file);
+	fwrite(&data_blocks, sizeof(data_blocks), N_BLOCKS, file);
+	fwrite(&inodes, sizeof(inode_t), N_INODES, file);
+
+	fclose(file);
+}
+
+
 
 static int
 fisopfs_getattr(const char *path, struct stat *st)
@@ -685,12 +704,16 @@ fisopfs_init(struct fuse_conn_info *conn)
 	printf("	[debug] context uid: %d, context gid: %d\n", context->uid, context->gid);
 
 
-	FILE *file = fopen(file_name, "w+");
+	printf("	[debug] Looking for saved file system data in file: %s\n", file_name);
+	FILE *file = fopen(file_name, "r");
+
 	if (file != NULL) {
+		printf("	[debug] File system data found: %s\n", file_name);
 		load_file_system(file);
 		fclose(file);
 	}
 	else {
+		printf("	[debug] File system data not found: %s\n", file_name);
 		// -----------------------------------
 		// initialize root inode
 		printf("	[debug] Initializing root inode\n");
@@ -709,6 +732,7 @@ fisopfs_init(struct fuse_conn_info *conn)
 		printf("	[debug] Directory entry size (aligned): %u\n", DENTRY_SIZE);
 
 	}
+
 	return NULL;
 }
 
@@ -801,26 +825,13 @@ fisopfs_unlink(const char *path)
 	return unlink_inode(path, inode);
 }
 
-void
-save_file_system()
-{
-	FILE *file = fopen(file_name, "w+");
 
-	fwrite(&superblock, sizeof(superblock_t), 1, file);
-	fwrite(&inode_bitmap, sizeof(bitmap_t), 1, file);
-	fwrite(&data_bitmap, sizeof(bitmap_t), 1, file);
-	fwrite(data_blocks, sizeof(data_blocks), N_BLOCKS, file);
-	fwrite(inodes, sizeof(inode_t), N_INODES, file);
-
-	fclose(file);
-}
 
 void
 fisopfs_destroy(void *a)
 {
+	printf("\n[debug] fisopfs_destroy\n");
 	save_file_system();
-	free(files);
-	free(dirs);
 }
 
 
