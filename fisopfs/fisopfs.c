@@ -666,7 +666,7 @@ static void *
 fisopfs_init(struct fuse_conn_info *conn)
 {
 	char name[FS_FILENAME_LEN];
-	printf("Enter a name for file system, must finish with .fisopfs \n");
+	printf("Enter a name for file system, must finish with .fisopfs and exist\n");
 	fgets(name, FS_FILENAME_LEN, stdin);
 	if (strlen(name) != 0 && (strstr(name, ".fisopfs") != 0)) {
 		strcpy(file_name, name);
@@ -679,14 +679,16 @@ fisopfs_init(struct fuse_conn_info *conn)
 	printf("	[debug] There's %u inodes in %u blocks\n", N_INODES, N_INODE_BLOCKS);
 	printf("	[debug] There's %u data blocks\n", N_DATA_BLOCKS);
 	printf("	[debug] Data region start block: %u\n\n", DATA_REGION);
+	printf("	[debug] File system name: %s\n\n", file_name);
 
 	struct fuse_context *context = fuse_get_context();
 	printf("	[debug] context uid: %d, context gid: %d\n", context->uid, context->gid);
 
 
-	FILE *file = fopen(file_name, "r+");
+	FILE *file = fopen(file_name, "w+");
 	if (file != NULL) {
 		load_file_system(file);
+		fclose(file);
 	}
 	else {
 		// -----------------------------------
@@ -707,7 +709,6 @@ fisopfs_init(struct fuse_conn_info *conn)
 		printf("	[debug] Directory entry size (aligned): %u\n", DENTRY_SIZE);
 
 	}
-	fclose(file);
 	return NULL;
 }
 
