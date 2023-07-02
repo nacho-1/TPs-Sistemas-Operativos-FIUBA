@@ -27,6 +27,10 @@ inode_t inodes[N_INODES];
 // data blocks
 static uint8_t data_blocks[N_DATA_BLOCKS * BLOCK_SIZE];
 
+char file_name[FS_FILENAME_LEN] = "fs.fisopfs";
+struct file *files;
+struct dirent *dirs;
+
 static void
 fill_stat(struct stat *st, inode_t *inode)
 {
@@ -639,6 +643,12 @@ fisopfs_utimens(const char *path, const struct timespec tv[2])
 static void *
 fisopfs_init(struct fuse_conn_info *conn)
 {
+	char name[FS_FILENAME_LEN];
+	fgets(name, FS_FILENAME_LEN, stdin);
+	strcpy(file_name, name);
+	printf(name);
+	printf(file_name);
+
 	printf("\n[debug] fisopfs_init\n");
 	printf("	[debug] There's %u blocks of %u bytes each\n", N_BLOCKS, BLOCK_SIZE);
 	printf("	[debug] Inode size is %lu bytes aligned to %u\n", sizeof(inode_t), INODE_SIZE);
@@ -759,6 +769,50 @@ fisopfs_unlink(const char *path)
 	return unlink_inode(path, inode);
 }
 
+void
+save_file_system()
+{
+	FILE *file = fopen(file_name, "w+");
+
+	fwrite(&superblock, sizeof(superblock_t), 1, file);
+	fwrite(&inode_bitmap, sizeof(bitmap_t), 1, file);
+	fwrite(&data_bitmap, sizeof(bitmap_t), 1, file);
+	fwrite(data_blocks, sizeof(data_blocks), N_BLOCKS, file);
+	fwrite(inodes, sizeof(inode_t), N_INODES, file);
+
+	fclose(file);
+}
+
+void
+fisopfs_destroy(void *a)
+{
+	save_file_system();
+	free(files);
+	free(dirs);
+}
+
+void
+load_file_system(FILE *file)
+{
+	if (fread(&superblock, sizeof(superblock_t), 1, file) <= 0) {
+		printf("error reading loading file: %s", file_name);
+	}
+	if (fread(&inode_bitmap, sizeof(bitmap_t), 1, file) <= 0) {
+		printf("error reading loading file: %s", file_name);
+	}
+	if (fread(&data_bitmap, sizeof(bitmap_t), 1, file) <= 0) {
+		printf("error reading loading file: %s", file_name);
+	};
+	if (fread(inodes, sizeof(inode_t), N_INODES, file) <= 0) {
+		printf("error reading loading file: %s", file_name);
+	}
+	if (fread(data_blocks, sizeof(data_blocks), N_BLOCKS, file) <= 0) {
+		printf("error reading loading file: %s", file_name);
+	}
+
+	fclose(file);
+}
+
 static struct fuse_operations operations = {
 	.init = fisopfs_init,
 	.getattr = fisopfs_getattr,
@@ -770,6 +824,7 @@ static struct fuse_operations operations = {
 	.mkdir = fisopfs_mkdir,
 	.utimens = fisopfs_utimens,
 	.unlink = fisopfs_unlink,
+	.destroy = fisopfs_destroy,
 };
 
 
