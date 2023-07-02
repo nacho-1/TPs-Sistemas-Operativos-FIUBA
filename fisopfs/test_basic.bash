@@ -22,11 +22,14 @@ expected="hola mundo"
 actual=$(cat hola.txt)
 
 if [[ $expected == "$actual" ]]; then
-  echo -e "${GREEN}[OK]${NO_COLOR} ${testName}"
+  echo -e "${GREEN}[OK]${NO_COLOR} ${testName}
+  "
 else
   echo -e "${RED}[ERROR]${NO_COLOR} ${testName}
+
 Expected: ${expected}
-     Got: ${actual}"
+     Got: ${actual}
+     "
 fi
 
 rm hola.txt
@@ -39,29 +42,34 @@ expected="  File: mydir"
 actual=$(stat mydir | grep 'File')
 
 if [[ $expected == "$actual" ]]; then
-  echo -e "${GREEN}[OK]${NO_COLOR} ${testName}"
+  echo -e "${GREEN}[OK]${NO_COLOR} ${testName}
+  "
 else
   echo -e "${RED}[ERROR]${NO_COLOR} ${testName}
 Expected: ${expected}
-     Got: ${actual}"
+     Got: ${actual}
+     "
 fi
 
 rmdir mydir
 
 
-testName="test02MkdirThenRmdirAndStatNameShouldNotBeCorrect"
+testName="test02MkdirThenRmdirThenLsShouldBeEmpty"
 
 mkdir mydir2
 rmdir mydir2
-notExpected="  File: mydir2"
-actual=$(stat mydir2 | grep 'File')
 
-if [[ $notExpected != "$actual" ]]; then
-  echo -e "${GREEN}[OK]${NO_COLOR} ${testName}"
+expected=""
+actual=$(ls)
+
+if [[ $expected == "$actual" ]]; then
+  echo -e "${GREEN}[OK]${NO_COLOR} ${testName}
+  "
 else
   echo -e "${RED}[ERROR]${NO_COLOR} ${testName}
-Not Expected: ${notExpected}
-         Got: ${actual}"
+Expected: ${expected}
+     Got: ${actual}
+     "
 fi
 
 
@@ -76,11 +84,13 @@ expected=$(trim "$expected")
 actual=$(trim "$actual")
 
 if [[ $expected == "$actual" ]]; then
-  echo -e "${GREEN}[OK]${NO_COLOR} ${testName}"
+  echo -e "${GREEN}[OK]${NO_COLOR} ${testName}
+  "
 else
   echo -e "${RED}[ERROR]${NO_COLOR} ${testName}
 Expected: ${expected}
-     Got: ${actual}"
+     Got: ${actual}
+     "
 fi
 
 rm file.txt
@@ -98,11 +108,13 @@ expected=$(trim "$expected")
 actual=$(trim "$actual")
 
 if [[ $expected = "$actual" ]]; then
-  echo -e "${GREEN}[OK]${NO_COLOR} ${testName}"
+  echo -e "${GREEN}[OK]${NO_COLOR} ${testName}
+  "
 else
   echo -e "${RED}[ERROR]${NO_COLOR} ${testName}
 Expected: ${expected}
-     Got: ${actual}"
+     Got: ${actual}
+     "
 fi
 
 rm file2.txt
@@ -117,11 +129,13 @@ expected="texto a copiar"
 actual=$(cat file4.txt)
 
 if [[ $expected == "$actual" ]]; then
-  echo -e "${GREEN}[OK]${NO_COLOR} ${testName}"
+  echo -e "${GREEN}[OK]${NO_COLOR} ${testName}
+  "
 else
   echo -e "${RED}[ERROR]${NO_COLOR} ${testName}
 Expected: ${expected}
-     Got: ${actual}"
+     Got: ${actual}
+     "
 fi
 
 rm file3.txt
@@ -132,15 +146,17 @@ testName="test06FileRemoval"
 
 touch file5
 rm file5
-not_expected="  File: file5"
-actual=$(stat file5 | grep 'File:')
+expected=""
+actual=$(ls)
 
-if [[ $not_expected != "$actual" ]]; then
-  echo -e "${GREEN}[OK]${NO_COLOR} ${testName}"
+if [[ $expected == "$actual" ]]; then
+  echo -e "${GREEN}[OK]${NO_COLOR} ${testName}
+  "
 else
   echo -e "${RED}[ERROR]${NO_COLOR} ${testName}
-Not Expected: ${not_expected}
-         Got: ${actual}"
+Expected: ${expected}
+     Got: ${actual}
+     "
 fi
 
 
@@ -153,12 +169,16 @@ expected="texto que sobreescribe"
 actual=$(cat file6.txt)
 
 if [[ $expected == "$actual" ]]; then
-  echo -e "${GREEN}[OK]${NO_COLOR} ${testName}"
+  echo -e "${GREEN}[OK]${NO_COLOR} ${testName}
+  "
 else
   echo -e "${RED}[ERROR]${NO_COLOR} ${testName}
 Expected: ${expected}
-     Got: ${actual}"
+     Got: ${actual}
+     "
 fi
+
+rm file6.txt
 
 
 testName="test08NestingThreeDirsThenLsInSecondDirShouldOnlyShowThirdDir"
@@ -175,11 +195,13 @@ expected="mydir5"
 actual=$(ls)
 
 if [[ $expected == "$actual" ]]; then
-  echo -e "${GREEN}[OK]${NO_COLOR} ${testName}"
+  echo -e "${GREEN}[OK]${NO_COLOR} ${testName}
+  "
 else
   echo -e "${RED}[ERROR]${NO_COLOR} ${testName}
 Expected: ${expected}
-     Got: ${actual}"
+     Got: ${actual}
+     "
 fi
 
 rmdir mydir5
@@ -200,11 +222,96 @@ expected_trimmed=$(echo -e "$expected" | tr -d '[:space:]')
 actual_trimmed=$(echo -e "$actual" | tr -d '[:space:]')
 
 if [[ $expected_trimmed == "$actual_trimmed" ]]; then
-  echo -e "${GREEN}[OK]${NO_COLOR} ${testName}"
+  echo -e "${GREEN}[OK]${NO_COLOR} ${testName}
+  "
 else
   echo -e "${RED}[ERROR]${NO_COLOR} ${testName}
 Expected: ${expected}
-     Got: ${actual}"
+     Got: ${actual}
+     "
 fi
 
 rm file7
+
+
+testName="test10TouchFileThenLsShouldShowFile"
+
+mkdir mydir5
+cd mydir5 || exit
+touch file8
+
+expected="file8"
+actual=$(ls)
+
+if [[ $expected_trimmed == "$actual_trimmed" ]]; then
+  echo -e "${GREEN}[OK]${NO_COLOR} ${testName}
+  "
+else
+  echo -e "${RED}[ERROR]${NO_COLOR} ${testName}
+Expected: ${expected}
+     Got: ${actual}
+     "
+fi
+
+rm file8
+cd .. || exit
+rmdir mydir5
+
+testName="test11LsMultipleFiles"
+
+mkdir mydir6
+touch file9
+echo "hola" > file10.txt
+mkdir mydir7
+
+expected="file9  file10  mydir6  mydir7"
+actual=$(ls)
+
+if [[ $expected_trimmed == "$actual_trimmed" ]]; then
+  echo -e "${GREEN}[OK]${NO_COLOR} ${testName}
+  "
+else
+  echo -e "${RED}[ERROR]${NO_COLOR} ${testName}
+Expected: ${expected}
+     Got: ${actual}
+     "
+fi
+
+rm file9
+rm file10.txt
+rmdir mydir7
+rmdir mydir6
+
+
+testName="test12MultipleCreationWritingAndRemovalOfFile"
+
+for i in $(seq 0 5000)
+do
+  touch file11
+  echo "This is an intentional design decision and not a bug.
+  If you have variables that will not have direct references,
+  consider using an associative array in bash, or just Ignore the warning.
+
+  Tracking indirect references is a common problem for compilers and
+  static analysis tool, and it is known to be unsolvable in the most general case.
+  There are two ways to handle unresolved indirections (which in a
+  realistic program will essentially be all of them):" > file11
+  rm file11
+done
+
+echo "texto esperado" >> file11
+
+expected="texto esperado"
+actual=$(cat file11)
+
+if [[ $expected == "$actual" ]]; then
+  echo -e "${GREEN}[OK]${NO_COLOR} ${testName}
+  "
+else
+  echo -e "${RED}[ERROR]${NO_COLOR} ${testName}
+Expected: ${expected}
+     Got: ${actual}
+     "
+fi
+
+rm file11

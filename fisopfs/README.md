@@ -59,4 +59,17 @@ $ sudo umount prueba
 $ make format
 ```
 
+## Pruebas
+
+Para las pruebas basicas primero hay que montar el filesystem.
+Luego se ejecuta
+```shell
+bash test_basic.bash
+```
+
+Para las pruebas de persistencia, ejecutar directamente sin levantar el filesystem.
+```shell
+sudo bash test_persistence.bash
+```
+
 Para efectivamente subir los cambios producidos por el `format`, hay que `git add .` y `git commit`.
