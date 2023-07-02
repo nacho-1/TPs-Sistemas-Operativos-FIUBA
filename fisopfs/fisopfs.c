@@ -674,7 +674,6 @@ int
 unlink_inode(const char *path, inode_t *inode)
 {
 	// Delete directory entry from parent dir
-
 	char parent_path[FS_MAX_PATH];
 	char filename[FS_FILENAME_LEN];
 	split_path(path, parent_path, filename);
@@ -726,14 +725,22 @@ unlink_inode(const char *path, inode_t *inode)
 	parent->size -= DENTRY_SIZE;
 	print_inode(parent);
 
+	// Free las parent data block if there is no content
 	if (((n_dentries - 1) % N_DENTRY_PER_BLOCK) == 0) {
-		printf("	[debug] Data block %d will be freed\n", parent->data_blocks[parent->n_blocks - 1]);
+		printf("	[debug] Data block %d from parent will be freed\n", parent->data_blocks[parent->n_blocks - 1]);
 		clear_bit(&data_bitmap, parent->data_blocks[parent->n_blocks - 1]);
 		parent->n_blocks--;
 	}
 
-
 	clear_bit(&inode_bitmap, inode->ino);
+
+	// Free file data blocks
+	for (int i = 0; i < inode->n_blocks; i++)
+	{
+		printf("	[debug] Data block %d from file will be freed\n", inode->data_blocks[i]);
+		clear_bit(&data_bitmap, inode->data_blocks[i]);
+		inode->n_blocks--;
+	}
 
 	return 0;
 }
