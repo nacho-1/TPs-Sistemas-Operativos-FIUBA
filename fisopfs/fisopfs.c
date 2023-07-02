@@ -336,6 +336,28 @@ write_file(inode_t *inode,
 	return bytes_written;
 }
 
+void
+load_file_system(FILE *file)
+{
+	if (fread(&superblock, sizeof(superblock_t), 1, file) <= 0) {
+		printf("error reading loading file: %s", file_name);
+	}
+	if (fread(&inode_bitmap, sizeof(bitmap_t), 1, file) <= 0) {
+		printf("error reading loading file: %s", file_name);
+	}
+	if (fread(&data_bitmap, sizeof(bitmap_t), 1, file) <= 0) {
+		printf("error reading loading file: %s", file_name);
+	};
+	if (fread(inodes, sizeof(inode_t), N_INODES, file) <= 0) {
+		printf("error reading loading file: %s", file_name);
+	}
+	if (fread(data_blocks, sizeof(data_blocks), N_BLOCKS, file) <= 0) {
+		printf("error reading loading file: %s", file_name);
+	}
+
+	fclose(file);
+}
+
 static int
 fisopfs_getattr(const char *path, struct stat *st)
 {
@@ -644,13 +666,11 @@ static void *
 fisopfs_init(struct fuse_conn_info *conn)
 {
 	char name[FS_FILENAME_LEN];
-	printf("Enter a name for file system, must finish with .fisopfs");
+	printf("Enter a name for file system, must finish with .fisopfs \n");
 	fgets(name, FS_FILENAME_LEN, stdin);
 	if (strlen(name) != 0 && (strstr(name, ".fisopfs") != 0)) {
 		strcpy(file_name, name);
 	}
-	printf(name);
-	printf(file_name);
 
 	printf("\n[debug] fisopfs_init\n");
 	printf("	[debug] There's %u blocks of %u bytes each\n", N_BLOCKS, BLOCK_SIZE);
@@ -663,23 +683,31 @@ fisopfs_init(struct fuse_conn_info *conn)
 	struct fuse_context *context = fuse_get_context();
 	printf("	[debug] context uid: %d, context gid: %d\n", context->uid, context->gid);
 
-	// -----------------------------------
-	// initialize root inode
-	printf("	[debug] Initializing root inode\n");
-	inode_t *root;
-	root = init_inode(__S_IFDIR | 0775);
-	print_inode(root);
 
-	// initialize superblock
-	superblock.n_dirs = 1;  // One dir: root
-	superblock.n_files = 0;
-	superblock.root_ino = root->ino;
+	FILE *file = fopen(file_name, "r+");
+	if (file != NULL) {
+		load_file_system(file);
+	}
+	else {
+		// -----------------------------------
+		// initialize root inode
+		printf("	[debug] Initializing root inode\n");
+		inode_t *root;
+		root = init_inode(__S_IFDIR | 0775);
+		print_inode(root);
 
-	printf("	[debug] Filesystem summary:\n");
-	printf("	[debug] There's %u directories\n", superblock.n_dirs);
-	printf("	[debug] There's %u files\n", superblock.n_files);
-	printf("	[debug] Directory entry size (aligned): %u\n", DENTRY_SIZE);
+		// initialize superblock
+		superblock.n_dirs = 1;  // One dir: root
+		superblock.n_files = 0;
+		superblock.root_ino = root->ino;
 
+		printf("	[debug] Filesystem summary:\n");
+		printf("	[debug] There's %u directories\n", superblock.n_dirs);
+		printf("	[debug] There's %u files\n", superblock.n_files);
+		printf("	[debug] Directory entry size (aligned): %u\n", DENTRY_SIZE);
+
+	}
+	fclose(file);
 	return NULL;
 }
 
@@ -794,27 +822,6 @@ fisopfs_destroy(void *a)
 	free(dirs);
 }
 
-void
-load_file_system(FILE *file)
-{
-	if (fread(&superblock, sizeof(superblock_t), 1, file) <= 0) {
-		printf("error reading loading file: %s", file_name);
-	}
-	if (fread(&inode_bitmap, sizeof(bitmap_t), 1, file) <= 0) {
-		printf("error reading loading file: %s", file_name);
-	}
-	if (fread(&data_bitmap, sizeof(bitmap_t), 1, file) <= 0) {
-		printf("error reading loading file: %s", file_name);
-	};
-	if (fread(inodes, sizeof(inode_t), N_INODES, file) <= 0) {
-		printf("error reading loading file: %s", file_name);
-	}
-	if (fread(data_blocks, sizeof(data_blocks), N_BLOCKS, file) <= 0) {
-		printf("error reading loading file: %s", file_name);
-	}
-
-	fclose(file);
-}
 
 static struct fuse_operations operations = {
 	.init = fisopfs_init,
