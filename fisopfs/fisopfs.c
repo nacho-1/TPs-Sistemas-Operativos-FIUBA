@@ -349,14 +349,12 @@ load_file_system(FILE *file)
 	if (fread(&data_bitmap, sizeof(bitmap_t), 1, file) <= 0) {
 		printf("error reading loading file: %s", file_name);
 	};
-	if (fread(&inodes, sizeof(inode_t), N_INODES, file) <= 0) {
+	if (fread(&inodes, sizeof(inode_t), 1, file) <= 0) {
 		printf("error reading loading file: %s", file_name);
 	}
-	if (fread(&data_blocks, sizeof(data_blocks), N_BLOCKS, file) <= 0) {
+	if (fread(&data_blocks, sizeof(data_blocks), 1, file) <= 0) {
 		printf("error reading loading file: %s", file_name);
 	}
-
-	fclose(file);
 }
 
 
@@ -369,8 +367,8 @@ save_file_system()
 	fwrite(&superblock, sizeof(superblock_t), 1, file);
 	fwrite(&inode_bitmap, sizeof(bitmap_t), 1, file);
 	fwrite(&data_bitmap, sizeof(bitmap_t), 1, file);
-	fwrite(&data_blocks, sizeof(data_blocks), N_BLOCKS, file);
-	fwrite(&inodes, sizeof(inode_t), N_INODES, file);
+	fwrite(&data_blocks, sizeof(data_blocks), 1, file);
+	fwrite(&inodes, sizeof(inode_t), 1, file);
 
 	fclose(file);
 }
