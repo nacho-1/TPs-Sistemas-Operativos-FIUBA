@@ -487,7 +487,7 @@ fisopfs_truncate(const char *path, off_t length)
 		free(buffer);
 		if (ret >= 0)
 			ret = 0;
-	} else { // length < inode->size
+	} else {  // length < inode->size
 		unsigned last_blk_no = length / BLOCK_SIZE;
 		unsigned last_blk_offset = length % BLOCK_SIZE;
 		unsigned n_blocks = inode->n_blocks;
@@ -735,8 +735,7 @@ unlink_inode(const char *path, inode_t *inode)
 	clear_bit(&inode_bitmap, inode->ino);
 
 	// Free file data blocks
-	for (int i = 0; i < inode->n_blocks; i++)
-	{
+	for (int i = 0; i < inode->n_blocks; i++) {
 		printf("	[debug] Data block %d from file will be freed\n", inode->data_blocks[i]);
 		clear_bit(&data_bitmap, inode->data_blocks[i]);
 		inode->n_blocks--;
@@ -759,6 +758,42 @@ fisopfs_unlink(const char *path)
 	return unlink_inode(path, inode);
 }
 
+
+static int
+fisopfs_rmdir(const char *path)
+{
+	printf("\n[debug] fisopfs_rmdir - path: %s\n", path);
+
+	inode_t *dir = find_inode(path);
+
+	if (!dir)
+		return -ENOENT;
+
+	if (!S_ISDIR(dir->mode))
+		return -ENOTDIR;
+
+	if (dir->ino == superblock.root_ino)
+		// forbid removal of the root inode
+		return -EPERM;
+
+
+	unsigned n_dentries = dir->size / DENTRY_SIZE;
+	printf("	[debug] Total entries: %u\n", n_dentries);
+
+	char ino_path[FS_MAX_PATH];
+	for (unsigned i = 0; i < n_dentries; i++) {
+		dirent_t *dentry = get_dirent(i, dir);
+		inode_t *inode = get_inode(dentry->d_ino);
+		strcpy(ino_path, path);
+		strcat(ino_path, "/");
+		strcat(ino_path, dentry->d_name);
+		printf("	[debug] unlink inode: %s\n", ino_path);
+		unlink_inode(ino_path, inode);
+	}
+
+	return unlink_inode(path, dir);
+}
+
 static struct fuse_operations operations = {
 	.init = fisopfs_init,
 	.getattr = fisopfs_getattr,
@@ -770,6 +805,7 @@ static struct fuse_operations operations = {
 	.mkdir = fisopfs_mkdir,
 	.utimens = fisopfs_utimens,
 	.unlink = fisopfs_unlink,
+	.rmdir = fisopfs_rmdir,
 };
 
 
