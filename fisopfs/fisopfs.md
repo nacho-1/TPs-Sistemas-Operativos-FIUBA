@@ -57,3 +57,10 @@ Asi para resolver el path de ejemplo: /dir/file.txt
    * Si no se pudo encontrar significa que el path no se puede resolver (no existe el archivo)
 
 Notar que el inodo curr_dir siempre tiene que ser de tipo directorio salvo para el ultimo token.
+
+
+## Referencias
+
+* https://github.com/GEscandar/Sistemas-Operativos-FIUBA/tree/master/tps/fisopfs
+* https://github.com/jmdieguez/fisopfs
+* ChatGPT (macro ALIGNPO2)
