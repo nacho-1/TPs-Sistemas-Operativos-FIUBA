@@ -367,8 +367,8 @@ save_file_system()
 	fwrite(&superblock, sizeof(superblock_t), 1, file);
 	fwrite(&inode_bitmap, sizeof(bitmap_t), 1, file);
 	fwrite(&data_bitmap, sizeof(bitmap_t), 1, file);
-	fwrite(&data_blocks, sizeof(data_blocks), 1, file);
 	fwrite(&inodes, sizeof(inode_t), 1, file);
+	fwrite(&data_blocks, sizeof(data_blocks), 1, file);
 
 	fclose(file);
 }
