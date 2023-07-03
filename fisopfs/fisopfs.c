@@ -898,6 +898,7 @@ static struct fuse_operations operations = {
 	.unlink = fisopfs_unlink,
 	.rmdir = fisopfs_rmdir,
 	.destroy = fisopfs_destroy,
+	.flush = fisopfs_flush
 };
 
 
