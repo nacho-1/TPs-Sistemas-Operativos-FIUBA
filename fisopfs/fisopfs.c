@@ -340,7 +340,7 @@ void
 load_file_system(FILE *file)
 {
 	printf("	[debug] loading file system\n");
-	if (fread(&superblock, sizeof(superblock_t), 1, file) <= 0) {
+	if (fread(&superblock, sizeof(superblock), 1, file) <= 0) {
 		printf("error reading loading file: %s", file_name);
 	}
 	if (fread(&__inode_bitmap, sizeof(__inode_bitmap), 1, file) <= 0) {
@@ -349,7 +349,7 @@ load_file_system(FILE *file)
 	if (fread(&__data_bitmap, sizeof(__data_bitmap), 1, file) <= 0) {
 		printf("error reading loading file: %s", file_name);
 	};
-	if (fread(&inodes, sizeof(inode_t), 1, file) <= 0) {
+	if (fread(&inodes, sizeof(inodes), 1, file) <= 0) {
 		printf("error reading loading file: %s", file_name);
 	}
 	if (fread(&data_blocks, sizeof(data_blocks), 1, file) <= 0) {
@@ -364,10 +364,10 @@ save_file_system()
 	printf("	[debug] saving file system\n");
 	FILE *file = fopen(file_name, "w+");
 
-	fwrite(&superblock, sizeof(superblock_t), 1, file);
+	fwrite(&superblock, sizeof(superblock), 1, file);
 	fwrite(&__inode_bitmap, sizeof(__inode_bitmap), 1, file);
 	fwrite(&__data_bitmap, sizeof(__data_bitmap), 1, file);
-	fwrite(&inodes, sizeof(inode_t), 1, file);
+	fwrite(&inodes, sizeof(inodes), 1, file);
 	fwrite(&data_blocks, sizeof(data_blocks), 1, file);
 
 	fclose(file);
