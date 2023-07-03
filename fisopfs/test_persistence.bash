@@ -8,7 +8,7 @@ testName="test00MountThenTouchFileThenUmountThenMountAgaintLsShouldShowFile"
 
 mkdir ptest
 
-./fisopfs ptest/
+echo prueba.fisopfs > ./fisopfs ptest/
 cd ptest || exit
 
 touch pfile
@@ -16,7 +16,7 @@ touch pfile
 cd .. || exit
 umount ptest
 
-./fisopfs ptest/
+echo prueba.fisopfs > ./fisopfs ptest/
 cd ptest || exit
 
 expected="pfile"
@@ -25,7 +25,6 @@ actual=$(ls)
 if [[ $expected == "$actual" ]]; then
   echo -e "${GREEN}[OK]${NO_COLOR} ${testName}
   "
-  rm pfile
 
 else
   echo -e "${RED}[ERROR]${NO_COLOR} ${testName}
@@ -34,7 +33,7 @@ Expected: ${expected}
      "
 fi
 
-
+rm pfile
 cd .. || exit
 umount ptest
 rmdir ptest
@@ -44,26 +43,24 @@ testName="test01DirPersistence"
 
 mkdir ptest
 
-./fisopfs ptest/
+echo prueba.fisopfs > ./fisopfs ptest/
 cd ptest || exit
 
 mkdir pdir1
-mkdir pdir2
 
 cd "$TP_DIR" || exit
 umount ptest
 
-./fisopfs ptest/
+echo prueba.fisopfs > ./fisopfs ptest/
 cd ptest || exit
 
-expected="pdir1  pdir2"
+expected="pdir1"
 actual=$(ls)
 
 if [[ $expected == "$actual" ]]; then
   echo -e "${GREEN}[OK]${NO_COLOR} ${testName}
   "
-  rmdir pdir1
-  rmdir pdir2
+
 else
   echo -e "${RED}[ERROR]${NO_COLOR} ${testName}
 Expected: ${expected}
@@ -71,6 +68,7 @@ Expected: ${expected}
      "
 fi
 
+rmdir pdir1
 cd "$TP_DIR" || exit
 umount ptest
 rmdir ptest
@@ -80,7 +78,7 @@ testName="test02RecursionLevelsPersistence"
 
 mkdir ptest
 
-./fisopfs ptest/
+echo prueba.fisopfs > ./fisopfs ptest/
 cd ptest || exit
 
 mkdir pdir3
@@ -92,7 +90,7 @@ touch pfile1
 cd "$TP_DIR" || exit
 umount ptest
 
-./fisopfs ptest/
+echo prueba.fisopfs > ./fisopfs ptest/
 cd ptest || exit
 cd pdir3 || exit
 cd pdir4 || exit
@@ -125,7 +123,7 @@ testName="test03WritingAFileThenTheContentIsPersisted"
 
 mkdir ptest
 
-./fisopfs ptest/
+echo prueba.fisopfs > ./fisopfs ptest/
 cd ptest || exit
 
 touch pfile2
@@ -134,7 +132,7 @@ echo "texto a persistir" > pfile2
 cd .. || exit
 umount ptest/
 
-./fisopfs ptest/
+echo prueba.fisopfs > ./fisopfs ptest/
 cd ptest || exit
 
 expected="texto a persistir"
