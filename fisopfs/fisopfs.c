@@ -28,8 +28,6 @@ inode_t inodes[N_INODES];
 static uint8_t data_blocks[N_DATA_BLOCKS * BLOCK_SIZE];
 
 char file_name[FS_FILENAME_LEN] = "fs.fisopfs";
-struct file *files;
-struct dirent *dirs;
 
 static void
 fill_stat(struct stat *st, inode_t *inode)
