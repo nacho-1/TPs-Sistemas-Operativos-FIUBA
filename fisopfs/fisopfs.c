@@ -753,9 +753,15 @@ fisopfs_init(struct fuse_conn_info *conn)
 	return NULL;
 }
 
-int
+static int
 unlink_inode(const char *path, inode_t *inode)
 {
+	if (inode == NULL)
+		return -ENOENT;
+
+	if (S_ISDIR(inode->mode) && inode->size > 0)
+		return -ENOTEMPTY;
+
 	// Delete directory entry from parent dir
 	char parent_path[FS_MAX_PATH];
 	char filename[FS_FILENAME_LEN];
@@ -815,14 +821,10 @@ unlink_inode(const char *path, inode_t *inode)
 		parent->n_blocks--;
 	}
 
-	clear_bit(&inode_bitmap, inode->ino);
+	if (!S_ISDIR(inode->mode))
+		shrink_file(inode, 0);
 
-	// Free file data blocks
-	for (int i = 0; i < inode->n_blocks; i++) {
-		printf("	[debug] Data block %d from file will be freed\n", inode->data_blocks[i]);
-		clear_bit(&data_bitmap, inode->data_blocks[i]);
-		inode->n_blocks--;
-	}
+	clear_bit(&inode_bitmap, inode->ino);
 
 	return 0;
 }
@@ -837,6 +839,8 @@ fisopfs_unlink(const char *path)
 	if (!inode)
 		return -ENOENT;
 
+	if (S_ISDIR(inode->mode))
+		return -EISDIR;
 
 	return unlink_inode(path, inode);
 }
@@ -859,10 +863,9 @@ fisopfs_rmdir(const char *path)
 		// forbid removal of the root inode
 		return -EPERM;
 
-
-	if (inode->file_size > 0 || inode->nentries > 0)
+	if (dir->size > 0)
 		// only delete a directory if it's empty
-		return -ENOTEMPTY
+		return -ENOTEMPTY;
 
 	return unlink_inode(path, dir);
 }
