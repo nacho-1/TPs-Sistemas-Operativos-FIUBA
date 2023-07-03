@@ -3,3 +3,10 @@
 
 #IDE files
 *.idea/
+
+#Testing
+*prueba/
+*testdir/
+
+#Filesystem
+*.fisopfs
