@@ -404,7 +404,6 @@ save_file_system()
 }
 
 
-
 static int
 fisopfs_getattr(const char *path, struct stat *st)
 {
@@ -701,7 +700,8 @@ static void *
 fisopfs_init(struct fuse_conn_info *conn)
 {
 	char name[FS_FILENAME_LEN];
-	char * fgets_status;;
+	char *fgets_status;
+	;
 	printf("Enter a name for file system, must finish with .fisopfs and exist\n");
 	fgets_status = fgets(name, FS_FILENAME_LEN, stdin);
 	if (fgets_status != NULL && (strstr(name, ".fisopfs") != NULL)) {
@@ -728,8 +728,7 @@ fisopfs_init(struct fuse_conn_info *conn)
 		printf("	[debug] File system data found: %s\n", file_name);
 		load_file_system(file);
 		fclose(file);
-	}
-	else {
+	} else {
 		printf("	[debug] File system data not found: %s\n", file_name);
 		// -----------------------------------
 		// initialize root inode
@@ -742,8 +741,6 @@ fisopfs_init(struct fuse_conn_info *conn)
 		superblock.n_dirs = 1;  // One dir: root
 		superblock.n_files = 0;
 		superblock.root_ino = root->ino;
-
-
 	}
 	printf("	[debug] Filesystem summary:\n");
 	printf("	[debug] There's %u directories\n", superblock.n_dirs);
@@ -876,6 +873,16 @@ fisopfs_destroy(void *a)
 {
 	printf("\n[debug] fisopfs_destroy\n");
 	save_file_system();
+}
+
+
+static int
+fisopfs_flush(const char *path, struct fuse_file_info *fi)
+{
+	printf("\n[debug] fisopfs_flush - path: %s\n", path);
+	save_file_system();
+
+	return 0;
 }
 
 static struct fuse_operations operations = {
