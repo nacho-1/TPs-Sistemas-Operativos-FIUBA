@@ -60,7 +60,6 @@ typedef struct {
 } inode_t;
 
 typedef struct {
-	int magic;
 	unsigned n_files;
 	unsigned n_dirs;
 	uint32_t root_ino;
