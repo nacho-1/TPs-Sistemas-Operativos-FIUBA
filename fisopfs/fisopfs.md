@@ -9,10 +9,17 @@ El diseño corresponde a un filesystem tipo Unix VSFS (Very Simple File System).
 Se tiene un espacio de memoria que representa al disco, el cual se trabaja de a bloques.
 Los bloques son un espacio de memoria contiguo, en este caso de 4096 bytes, basandonos en el tamaño de las paginas de memoria en x86.
 
+Si bien en un principio se penso en tener todas las estructuras dentro de los bloques, al final se decidio que los los bloques de datos estén efectivamente
+manejadas como bloques en si.
+
+Las otras estructuras estan pensadas para manejarse dentro de bloques, es decir los tamaños que ocupan y sus cantidades podrian mapearse a un espacio
+de memoria especifico sin mayor dificultad, para asi estar contenidas dentro del array de bloques, pero por simplicidad, se declaran dentro del programa y se leen y escriben a disco
+normalmente. Pero la estructura del FS seria la siguiente si no fuera por esta salvedad:
+
 Dados N bloques de memoria se toman:
-* El primer bloque como superbloque, que contiene metadata del fs.
-* Otros 2 bloques que se usan como bitmaps de inodos y bloques de datos.
-* N_INODE_BLOCKS bloques de inodos.
+* El primer bloque como superbloque, que contiene metadata del fs (no se usa un bloque entero sino que solo se declara el struct).
+* Otros 2 bloques que se usan como bitmaps de inodos y bloques de datos (idem que para el superbloque).
+* N_INODE_BLOCKS bloques de inodos (solamente se declara un array de inodos).
 * El resto (N - (3 + N_INODE_BLOCKS)) bloques de datos.
 
 Los bloques de datos son simplemente espacios de memoria sin un formato o estructura especifico. Se los trabaja como un array de bytes.
