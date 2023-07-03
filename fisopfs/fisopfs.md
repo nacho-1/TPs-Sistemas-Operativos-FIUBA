@@ -55,6 +55,11 @@ Asi para resolver el path de ejemplo: /dir/file.txt
 
 Notar que el inodo curr_dir siempre tiene que ser de tipo directorio salvo para el ultimo token.
 
+### Serialización del sistema de archivos en disco
+Para la implementación de la persistencia en disco del filesystem, se utiliza un archivo de extensión fisopfs. Al montar el FS, se pregunta por un nombre de archivo para cargar datos del FS y en caso de no ingresar ninguno, se toma por defecto "fs.fisopfs". Luego, al realizar un flush o desmontar el FS, se guarda el estado del FS en ese archivo.
+
+El archivo guarda la información del superbloque, el estado del bitmap de inodos y de datos, la tabla de inodos y los bloques de datos. Para esto, simplemente se escribe en el archivo la secuencia de bytes que representan estas estructuras en serie. Al leer el archivo, se mapean estos bytes a sus respectivas estructuras considerando que el tamaño de estas es fijo y por lo tanto, el mapeo hacia las estructuras se mantiene independientemente de la cantidad de dados útiles que se estén almacenando.
+
 
 ## Referencias
 * OSTEP, capítulo 39: Interlude: Files and Directories (PDF)
