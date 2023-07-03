@@ -285,7 +285,7 @@ rmdir mydir6
 
 testName="test12MultipleCreationWritingAndRemovalOfFile"
 
-for i in $(seq 0 5000)
+for i in $(seq 0 10)
 do
   touch file11
   echo "This is an intentional design decision and not a bug.

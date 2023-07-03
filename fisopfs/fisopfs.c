@@ -701,9 +701,10 @@ static void *
 fisopfs_init(struct fuse_conn_info *conn)
 {
 	char name[FS_FILENAME_LEN];
+	char * fgets_status;;
 	printf("Enter a name for file system, must finish with .fisopfs and exist\n");
-	fgets(name, FS_FILENAME_LEN, stdin);
-	if (strlen(name) != 0 && (strstr(name, ".fisopfs") != 0)) {
+	fgets_status = fgets(name, FS_FILENAME_LEN, stdin);
+	if (fgets_status != NULL && (strstr(name, ".fisopfs") != NULL)) {
 		strcpy(file_name, name);
 	}
 
@@ -859,19 +860,9 @@ fisopfs_rmdir(const char *path)
 		return -EPERM;
 
 
-	unsigned n_dentries = dir->size / DENTRY_SIZE;
-	printf("	[debug] Total entries: %u\n", n_dentries);
-
-	char ino_path[FS_MAX_PATH];
-	for (unsigned i = 0; i < n_dentries; i++) {
-		dirent_t *dentry = get_dirent(i, dir);
-		inode_t *inode = get_inode(dentry->d_ino);
-		strcpy(ino_path, path);
-		strcat(ino_path, "/");
-		strcat(ino_path, dentry->d_name);
-		printf("	[debug] unlink inode: %s\n", ino_path);
-		unlink_inode(ino_path, inode);
-	}
+	if (inode->file_size > 0 || inode->nentries > 0)
+		// only delete a directory if it's empty
+		return -ENOTEMPTY
 
 	return unlink_inode(path, dir);
 }
