@@ -27,6 +27,10 @@ inode_t inodes[N_INODES];
 // data blocks
 static uint8_t data_blocks[N_DATA_BLOCKS * BLOCK_SIZE];
 
+char file_name[FS_FILENAME_LEN] = "fs.fisopfs";
+struct file *files;
+struct dirent *dirs;
+
 static void
 fill_stat(struct stat *st, inode_t *inode)
 {
@@ -332,6 +336,7 @@ write_file(inode_t *inode,
 	return bytes_written;
 }
 
+
 /*
  * Disminuye el tamaño del archivo asociado al inodo
  * al tamaño length
@@ -359,6 +364,46 @@ shrink_file(inode_t *inode, off_t length)
 	inode->ctim = time(NULL);
 	inode->mtim = inode->ctim;
 }
+
+
+void
+load_file_system(FILE *file)
+{
+	printf("	[debug] loading file system\n");
+	if (fread(&superblock, sizeof(superblock), 1, file) <= 0) {
+		printf("error reading loading file: %s", file_name);
+	}
+	if (fread(&__inode_bitmap, sizeof(__inode_bitmap), 1, file) <= 0) {
+		printf("error reading loading file: %s", file_name);
+	}
+	if (fread(&__data_bitmap, sizeof(__data_bitmap), 1, file) <= 0) {
+		printf("error reading loading file: %s", file_name);
+	};
+	if (fread(&inodes, sizeof(inodes), 1, file) <= 0) {
+		printf("error reading loading file: %s", file_name);
+	}
+	if (fread(&data_blocks, sizeof(data_blocks), 1, file) <= 0) {
+		printf("error reading loading file: %s", file_name);
+	}
+}
+
+
+void
+save_file_system()
+{
+	printf("	[debug] saving file system\n");
+	FILE *file = fopen(file_name, "w+");
+
+	fwrite(&superblock, sizeof(superblock), 1, file);
+	fwrite(&__inode_bitmap, sizeof(__inode_bitmap), 1, file);
+	fwrite(&__data_bitmap, sizeof(__data_bitmap), 1, file);
+	fwrite(&inodes, sizeof(inodes), 1, file);
+	fwrite(&data_blocks, sizeof(data_blocks), 1, file);
+
+	fclose(file);
+}
+
+
 
 static int
 fisopfs_getattr(const char *path, struct stat *st)
@@ -655,6 +700,13 @@ fisopfs_utimens(const char *path, const struct timespec tv[2])
 static void *
 fisopfs_init(struct fuse_conn_info *conn)
 {
+	char name[FS_FILENAME_LEN];
+	printf("Enter a name for file system, must finish with .fisopfs and exist\n");
+	fgets(name, FS_FILENAME_LEN, stdin);
+	if (strlen(name) != 0 && (strstr(name, ".fisopfs") != 0)) {
+		strcpy(file_name, name);
+	}
+
 	printf("\n[debug] fisopfs_init\n");
 	printf("	[debug] There's %u blocks of %u bytes each\n", N_BLOCKS, BLOCK_SIZE);
 	printf("	[debug] Inode size is %lu bytes aligned to %u\n", sizeof(inode_t), INODE_SIZE);
@@ -662,22 +714,36 @@ fisopfs_init(struct fuse_conn_info *conn)
 	printf("	[debug] There's %u inodes in %u blocks\n", N_INODES, N_INODE_BLOCKS);
 	printf("	[debug] There's %u data blocks\n", N_DATA_BLOCKS);
 	printf("	[debug] Data region start block: %u\n\n", DATA_REGION);
+	printf("	[debug] File system name: %s\n\n", file_name);
 
 	struct fuse_context *context = fuse_get_context();
 	printf("	[debug] context uid: %d, context gid: %d\n", context->uid, context->gid);
 
-	// -----------------------------------
-	// initialize root inode
-	printf("	[debug] Initializing root inode\n");
-	inode_t *root;
-	root = init_inode(__S_IFDIR | 0775);
-	print_inode(root);
 
-	// initialize superblock
-	superblock.n_dirs = 1;  // One dir: root
-	superblock.n_files = 0;
-	superblock.root_ino = root->ino;
+	printf("	[debug] Looking for saved file system data in file: %s\n", file_name);
+	FILE *file = fopen(file_name, "r");
 
+	if (file != NULL) {
+		printf("	[debug] File system data found: %s\n", file_name);
+		load_file_system(file);
+		fclose(file);
+	}
+	else {
+		printf("	[debug] File system data not found: %s\n", file_name);
+		// -----------------------------------
+		// initialize root inode
+		printf("	[debug] Initializing root inode\n");
+		inode_t *root;
+		root = init_inode(__S_IFDIR | 0775);
+		print_inode(root);
+
+		// initialize superblock
+		superblock.n_dirs = 1;  // One dir: root
+		superblock.n_files = 0;
+		superblock.root_ino = root->ino;
+
+
+	}
 	printf("	[debug] Filesystem summary:\n");
 	printf("	[debug] There's %u directories\n", superblock.n_dirs);
 	printf("	[debug] There's %u files\n", superblock.n_files);
@@ -810,6 +876,14 @@ fisopfs_rmdir(const char *path)
 	return unlink_inode(path, dir);
 }
 
+
+void
+fisopfs_destroy(void *a)
+{
+	printf("\n[debug] fisopfs_destroy\n");
+	save_file_system();
+}
+
 static struct fuse_operations operations = {
 	.init = fisopfs_init,
 	.getattr = fisopfs_getattr,
@@ -822,6 +896,7 @@ static struct fuse_operations operations = {
 	.utimens = fisopfs_utimens,
 	.unlink = fisopfs_unlink,
 	.rmdir = fisopfs_rmdir,
+	.destroy = fisopfs_destroy,
 };
 
 

@@ -71,4 +71,10 @@ typedef struct {
 	uint32_t d_ino;  // inode number
 } dirent_t;
 
+typedef struct {
+	char path[FS_FILENAME_LEN];
+	char filename[FS_FILENAME_LEN];  // filename used by FUSE filler
+	int d_ino;                       // inode number
+} file_t;
+
 #endif  // _FISOPFS_H_
