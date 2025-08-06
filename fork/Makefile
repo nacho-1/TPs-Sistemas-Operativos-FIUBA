@@ -8,8 +8,8 @@ all: $(PROGS)
 
 find: find.o
 xargs: xargs.o
-primes: primes.o
-pingpong: pingpong.o
+primes: util.o primes.o
+pingpong: util.o pingpong.o
 
 format: .clang-files .clang-format
 	xargs -r clang-format -i <$<
