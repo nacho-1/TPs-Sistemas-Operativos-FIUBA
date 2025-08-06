@@ -5,6 +5,8 @@
 
 extern char prompt[PRMTLEN];
 
+extern char **history_arr;
+
 int cd(char *cmd);
 
 int exit_shell(char *cmd);

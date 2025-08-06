@@ -9,5 +9,7 @@ int block_contains(char *buf, char c);
 
 int printf_debug(char *format, ...);
 int fprintf_debug(FILE *file, char *format, ...);
+void perror_debug(const char *s);
+void eprint_debug(int errno_val, char *fmt, ...);
 
 #endif  // UTILS_H

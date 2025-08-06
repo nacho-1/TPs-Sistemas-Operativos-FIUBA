@@ -14,6 +14,7 @@
 #include <signal.h>
 #include <sys/wait.h>
 #include <sys/types.h>
+#include <ctype.h>
 
 #ifndef SHELL_NO_COLORS
 // color scape strings
@@ -29,6 +30,12 @@
 #define END_STRING '\0'
 #define END_LINE '\n'
 #define SPACE ' '
+
+#define CHAR_NL '\n'
+#define CHAR_EOXMIT '\004'
+#define CHAR_BACK '\b'
+#define CHAR_DEL 127
+#define CHAR_ESC '\033'
 
 #define BUFLEN 1024
 #define PRMTLEN 1024
@@ -47,5 +54,11 @@
 #define WRITE 1
 
 #define EXIT_SHELL 1
+
+// History memory alloc
+#define MAX_HISTORY_LINE_SIZE 1024
+#define INITIAL_HISTORY_LINES 50
+#define HISTORY_GROWING_FACTOR 2
+
 
 #endif  // DEFS_H

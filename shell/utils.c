@@ -63,3 +63,28 @@ fprintf_debug(FILE *file, char *format, ...)
 	return 0;
 #endif
 }
+
+void
+perror_debug(const char *s)
+{
+#ifndef SHELL_NO_INTERACTIVE
+	perror(s);
+#endif
+}
+
+void
+eprint_debug(int error_code, char *fmt, ...)
+{
+#ifndef SHELL_NO_INTERACTIVE
+	char msg_error[256];
+	va_list args;
+	va_start(args, fmt);
+	int ret = vsnprintf(msg_error, sizeof(msg_error), fmt, args);
+	va_end(args);
+	char *ret_str =
+	        strerror_r(error_code, msg_error + ret, sizeof(msg_error) - ret);
+	if (ret_str != NULL) {
+		fprintf(stderr, "%s", msg_error);
+	}
+#endif
+}

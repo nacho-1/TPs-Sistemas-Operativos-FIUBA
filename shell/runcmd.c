@@ -2,11 +2,29 @@
 
 int status = 0;
 struct cmd *parsed_pipe;
+int back_process_count = 0;
+
+void
+wait_back_processes(void)
+{
+	// Try to wait background processes
+	int updated_count = 0;
+	for (int i = 0; i < back_process_count; i++) {
+		pid_t ret = waitpid(-1, &status, WNOHANG);
+		if (ret == 0)
+			updated_count++;
+		else if (ret == -1)
+			perror_debug("Error waiting background processes");
+	}
+	back_process_count = updated_count;
+}
 
 // runs the command in 'cmd'
 int
 run_cmd(char *cmd)
 {
+	wait_back_processes();
+
 	pid_t p;
 	struct cmd *parsed;
 
@@ -14,6 +32,8 @@ run_cmd(char *cmd)
 	// just print the prompt again
 	if (cmd[0] == END_STRING)
 		return 0;
+
+	save_command(cmd);
 
 	// "history" built-in call
 	if (history(cmd))
@@ -36,13 +56,11 @@ run_cmd(char *cmd)
 
 	// forks and run the command
 	if ((p = fork()) == 0) {
-		// keep a reference
-		// to the parsed pipe cmd
-		// so it can be freed later
-		if (parsed->type == PIPE)
-			parsed_pipe = parsed;
-
+		free_history();
 		exec_cmd(parsed);
+		free_command(parsed);
+		fflush(stdout);
+		_exit(EXIT_FAILURE);
 	}
 
 	// stores the pid of the process
@@ -56,11 +74,14 @@ run_cmd(char *cmd)
 	// 	'print_back_info()'
 	//
 	// Your code here
-
-	// waits for the process to finish
-	waitpid(p, &status, 0);
-
-	print_status_info(parsed);
+	if (parsed->type == BACK) {
+		print_back_info(parsed);
+		back_process_count++;
+	} else {
+		// waits for the process to finish
+		waitpid(p, &status, 0);
+		print_status_info(parsed);
+	}
 
 	free_command(parsed);
 

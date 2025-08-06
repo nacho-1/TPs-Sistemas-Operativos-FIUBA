@@ -1,7 +1,10 @@
 #include "defs.h"
 #include "types.h"
+#include "history.h"
 #include "readline.h"
 #include "runcmd.h"
+#include "set_input_mode.h"
+
 
 char prompt[PRMTLEN] = { 0 };
 
@@ -11,9 +14,12 @@ run_shell()
 {
 	char *cmd;
 
-	while ((cmd = read_line(prompt)) != NULL)
-		if (run_cmd(cmd) == EXIT_SHELL)
+	while ((cmd = read_line(prompt)) != NULL) {
+		if (run_cmd(cmd) == EXIT_SHELL) {
+			free_history();
 			return;
+		}
+	}
 }
 
 // initializes the shell
@@ -21,6 +27,10 @@ run_shell()
 static void
 init_shell()
 {
+#ifndef SHELL_NO_INTERACTIVE
+	set_input_mode();
+#endif
+
 	char buf[BUFLEN] = { 0 };
 	char *home = getenv("HOME");
 
@@ -30,6 +40,8 @@ init_shell()
 	} else {
 		snprintf(prompt, sizeof prompt, "(%s)", home);
 	}
+
+	load_history();
 }
 
 int

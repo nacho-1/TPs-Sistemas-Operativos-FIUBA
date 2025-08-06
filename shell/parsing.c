@@ -1,7 +1,7 @@
 #include "parsing.h"
-
+#include "runcmd.h"
 // parses an argument of the command stream input
-static char *
+char *
 get_token(char *buf, int idx)
 {
 	char *tok;
@@ -98,12 +98,41 @@ parse_environ_var(struct execcmd *c, char *arg)
 // - remember to check the size of variable's value
 //		It could be greater than the current size of 'arg'
 //		If that's the case, you should realloc 'arg' to the new size.
-static char *
+void
 expand_environ_var(char *arg)
 {
-	// Your code here
-
-	return arg;
+	char *buf;
+	int indx = block_contains(arg, '$');
+	if (indx == 0) {
+		if (strcmp(arg, "$?") == 0) {
+			sprintf(arg, "%d", status);
+			return;
+		}
+		buf = getenv(arg + 1);
+		if (buf) {
+			size_t buf_size = strlen(buf);
+			if ((int) buf_size > ARGSIZE) {
+				int i = (int) buf_size / ARGSIZE + 1;
+				char *temp = (char *) realloc(arg, ARGSIZE * i);
+				if (temp) {
+					arg = temp;
+				} else {
+					printf_debug("Variable"
+					             " expansion error: "
+					             "Realloc failed\n");
+					strcpy(arg, "");
+					return;
+				}
+			}
+			strncpy(arg, buf, buf_size);
+			// Para asegurarme.
+			arg[buf_size] = '\0';
+		} else {
+			strcpy(arg, "");
+			return;
+		}
+	}
+	return;
 }
 
 // parses one single command having into account:
@@ -132,9 +161,10 @@ parse_exec(char *buf_cmd)
 		if (parse_environ_var(c, tok))
 			continue;
 
-		tok = expand_environ_var(tok);
-
-		c->argv[argc++] = tok;
+		expand_environ_var(tok);
+		if (strcmp(tok, "") != 0) {
+			c->argv[argc++] = tok;
+		}
 	}
 
 	c->argv[argc] = (char *) NULL;
@@ -189,7 +219,7 @@ parse_line(char *buf)
 	char *right = split_line(buf, '|');
 
 	l = parse_cmd(buf);
-	r = parse_cmd(right);
+	r = strlen(right) != 0 ? parse_line(right) : NULL;
 
 	return pipe_cmd_create(l, r);
 }

@@ -7,6 +7,8 @@ exec.c
 exec.h
 freecmd.c
 freecmd.h
+history.c
+history.h
 parsing.c
 parsing.h
 printstatus.c
@@ -15,6 +17,8 @@ readline.c
 readline.h
 runcmd.c
 runcmd.h
+set_input_mode.c
+set_input_mode.h
 sh.c
 types.h
 utils.c
