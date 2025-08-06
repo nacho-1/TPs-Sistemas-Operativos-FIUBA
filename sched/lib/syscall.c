@@ -56,6 +56,18 @@ sys_getenvid(void)
 	return syscall(SYS_getenvid, 0, 0, 0, 0, 0, 0);
 }
 
+int
+sys_getpriority(void)
+{
+	return syscall(SYS_getpriority, 0, 0, 0, 0, 0, 0);
+}
+
+void
+sys_reduce_priority(int relative_percent)
+{
+	syscall(SYS_reduce_priority, 1, relative_percent, 0, 0, 0, 0);
+}
+
 void
 sys_yield(void)
 {

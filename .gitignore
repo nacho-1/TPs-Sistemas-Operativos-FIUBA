@@ -1,0 +1,13 @@
+# Dolphin
+.directory
+
+#IDE files
+.idea/
+
+#Vagrant files
+*Vagrant*
+*vagrant*
+*ubuntu*.log
+
+#Testing
+gdb.output

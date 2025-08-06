@@ -5,14 +5,26 @@
 #include <kern/pmap.h>
 #include <kern/monitor.h>
 
+extern int total_tickets;
+int prev_random = 1234;  // seed
+
 void sched_halt(void);
+void get_next_runnable_process(int first, int last);
+int generate_pseudorandom_value();
+void get_stats();
+
+// stats
+int sched_calls = 0;
+int boost_calls = 0;
 
 // Choose a user environment to run and run it.
 void
 sched_yield(void)
 {
-	struct Env *idle;
+	struct Env *idle = NULL;
+	sched_calls++;
 
+#ifdef SCHED_ROUND_ROBIN
 	// Implement simple round-robin scheduling.
 	//
 	// Search through 'envs' for an ENV_RUNNABLE environment in
@@ -29,13 +41,66 @@ sched_yield(void)
 	// below to halt the cpu.
 
 	// Your code here
-	// Wihtout scheduler, keep runing the last environment while it exists
-	if (curenv) {
-		env_run(curenv);
+	// Without scheduler, keep running the last environment while it exists
+	/*
+	        if (curenv) {
+	                env_run(curenv);
+	        }
+	*/
+	int pos = 0;
+	idle = curenv;
+
+	if (idle != NULL) {
+		pos = ENVX(idle->env_id) + 1;
 	}
+
+	// recorrer el arreglo de manera circular
+	get_next_runnable_process(pos, NENV);
+	get_next_runnable_process(0, pos);
+
+	// si no hay otro proceso runnable sigo corriendo el actual
+	if (idle && idle->env_status == ENV_RUNNING) {
+		env_run(idle);
+	}
+#elif SCHED_PROPORTIONAL_SHARE
+	// counter: used to track if we’ve found the winner yet
+	int counter = 0;
+	if (curenv) {
+		if (curenv->env_status == ENV_RUNNING) {
+			idle = curenv;
+		}
+	}
+	// winner: use some call to a random number generator to
+	// get a value, between 0 and the total # of tickets
+	int winner = generate_pseudorandom_value();
+
+	for (int i = 0; i < NENV; i++) {
+		if (envs[i].env_status == ENV_RUNNABLE) {
+			idle = &envs[i];
+			counter += envs[i].tickets;
+			if (counter >= winner) {
+				break;  // found the winner
+			}
+		}
+	}
+	if (idle) {
+		env_run(idle);
+	}
+#endif
 
 	// sched_halt never returns
 	sched_halt();
+}
+
+void
+get_next_runnable_process(int first, int last)
+{
+	int pos = first;
+	for (pos; pos < last; pos++) {
+		if (envs[pos].env_status == ENV_RUNNABLE) {
+			env_run(&envs[pos]);
+		}
+	}
 }
 
 // Halt this CPU when there is nothing to do. Wait until the
@@ -56,6 +121,7 @@ sched_halt(void)
 	}
 	if (i == NENV) {
 		cprintf("No runnable environments in the system!\n");
+		get_stats();
 		while (1)
 			monitor(NULL);
 	}
@@ -87,3 +153,72 @@ sched_halt(void)
 	             :
 	             : "a"(thiscpu->cpu_ts.ts_esp0));
 }
+
+int
+generate_pseudorandom_value()
+{
+	unsigned long long int a = 4294967296;
+	int c = 1013904223;
+	int m = 1664525;
+
+	unsigned int random = (a * prev_random + c) % m;
+	int rand_tickets = random * total_tickets / m;
+	int percent = random * 100 / m;
+	prev_random = random;
+
+	return rand_tickets;
+}
+
+void
+get_stats()
+{
+	cprintf("----- Scheduler stats -----\n");
+
+	cprintf("Historial de procesos ejecutados\n");
+	for (int i = 0; i < NENV; i++) {
+		if (envs[i].env_runs == 0)
+			continue;
+		cprintf("- %d \n", envs[i].env_id);
+	}
+	cprintf("\n");
+	cprintf("Cantidad de ejecuciones por proceso\n");
+	for (int j = 0; j < NENV; j++) {
+		if (envs[j].env_runs == 0)
+			continue;
+		cprintf("- %d: %d veces\n", envs[j].env_id, envs[j].env_runs);
+	}
+	cprintf("\n");
+	cprintf("Cantidad de boosts de prioridades: %d\n", boost_calls);
+	cprintf("Cantidad de llamadas al scheduler: %d\n", sched_calls);
+}
+
+#ifdef SCHED_PROPORTIONAL_SHARE
+void
+reduce_current_env_prio(void)
+{
+	if (curenv == NULL)
+		return;
+
+	if (curenv->tickets > 10) {
+		total_tickets -= 10;
+		curenv->tickets -= 10;
+	} else {
+		total_tickets -= curenv->tickets - 1;
+		curenv->tickets = 1;
+	}
+}
+
+void
+sched_boost(void)
+{
+	boost_calls++;
+	total_tickets = 0;
+	for (int i = 0; i < NENV; i++) {
+		if (envs[i].env_status == ENV_RUNNABLE ||
+		    envs[i].env_status == ENV_RUNNING) {  // otros estados?
+			envs[i].tickets = 100;
+			total_tickets += 100;
+		}
+	}
+}
+#endif

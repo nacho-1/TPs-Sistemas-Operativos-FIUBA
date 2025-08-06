@@ -12,6 +12,7 @@
 #include <kern/console.h>
 #include <kern/sched.h>
 
+extern int total_tickets;
 
 static int
 check_perm(int perm, pte_t *pte)
@@ -100,6 +101,33 @@ static envid_t
 sys_getenvid(void)
 {
 	return curenv->env_id;
+}
+
+
+// Syscall used to get process priority
+// Returns the number of tickets assigned to the process
+// A bigger number of tickets indicate more priority
+static int
+sys_getpriority(void)
+{
+	return curenv->tickets;
+}
+
+// Syscall used to reduce process priority
+// The argument set the relative percent of the total tickets that
+// wants to be reduced.
+static void
+sys_reduce_priority(int relative_percent)
+{
+	int new_ticket_number = curenv->tickets * relative_percent / 100;
+
+	if (new_ticket_number > 0) {
+		total_tickets -= new_ticket_number;
+		curenv->tickets -= new_ticket_number;
+	} else {
+		total_tickets -= curenv->tickets - 1;
+		curenv->tickets = 1;
+	}
 }
 
 // Destroy a given environment (possibly the currently running environment).
@@ -429,6 +457,7 @@ sys_ipc_recv(void *dstva)
 	return 0;
 }
 
+
 // Dispatches to the correct kernel function, passing the arguments.
 int32_t
 syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, uint32_t a5)
@@ -442,6 +471,10 @@ syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, 
 		return 0;
 	case SYS_getenvid:
 		return sys_getenvid();
+	case SYS_getpriority:
+		return sys_getpriority();
+	case SYS_reduce_priority:
+		sys_reduce_priority(a1);  // no return
 	case SYS_env_destroy:
 		return sys_env_destroy(a1);
 	case SYS_cgetc:
